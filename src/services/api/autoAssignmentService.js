@@ -1,155 +1,300 @@
 import { teamMemberService } from './teamMemberService';
-
-const assignmentRules = [
-  {
-    Id: 1,
-    name: "Lead Distribution by Source",
-    entity: "leads",
-    isActive: true,
-    priority: 1,
-    criteria: {
-      type: "source_based",
-      conditions: [
-        { field: "source", operator: "equals", value: "website", assignTo: 1 },
-        { field: "source", operator: "equals", value: "referral", assignTo: 2 },
-        { field: "source", operator: "equals", value: "social_media", assignTo: 3 }
-      ]
-    },
-    fallbackStrategy: "round_robin",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    Id: 2,
-    name: "High Value Deal Assignment",
-    entity: "deals",
-    isActive: true,
-    priority: 2,
-    criteria: {
-      type: "value_based",
-      conditions: [
-        { field: "amount", operator: "greater_than", value: 50000, assignTo: 1 },
-        { field: "amount", operator: "between", value: [10000, 50000], assignTo: 2 }
-      ]
-    },
-    fallbackStrategy: "least_workload",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    Id: 3,
-    name: "Task Priority Assignment",
-    entity: "tasks",
-    isActive: true,
-    priority: 3,
-    criteria: {
-      type: "priority_based",
-      conditions: [
-        { field: "priority", operator: "equals", value: "high", assignTo: 1 },
-        { field: "priority", operator: "equals", value: "medium", assignTo: 2 }
-      ]
-    },
-    fallbackStrategy: "availability_based",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    Id: 4,
-    name: "Contact Company Size Rules",
-    entity: "contacts",
-    isActive: true,
-    priority: 4,
-    criteria: {
-      type: "company_based",
-      conditions: [
-        { field: "company", operator: "contains", value: "Enterprise", assignTo: 1 },
-        { field: "company", operator: "contains", value: "Corp", assignTo: 2 }
-      ]
-    },
-    fallbackStrategy: "expertise_based",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-let nextId = 5;
+import { getApperClient } from '@/services/apperClient'
+import { toast } from 'react-toastify'
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Assignment history tracking
-const assignmentHistory = [];
 
 export const autoAssignmentService = {
   // Rule Management
   async getAllRules() {
     await delay(200);
-    return [...assignmentRules];
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.fetchRecords('assignment_rule_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "entity_c"}},
+          {"field": {"Name": "isActive_c"}},
+          {"field": {"Name": "priority_c"}},
+          {"field": {"Name": "criteria_c"}},
+          {"field": {"Name": "fallbackStrategy_c"}},
+          {"field": {"Name": "assignTo_c"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "ModifiedOn"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      return (response.data || []).map(rule => ({
+        Id: rule.Id,
+        name: rule.Name,
+        entity: rule.entity_c,
+        isActive: rule.isActive_c,
+        priority: rule.priority_c || 1,
+        criteria: rule.criteria_c ? JSON.parse(rule.criteria_c) : { conditions: [] },
+        fallbackStrategy: rule.fallbackStrategy_c || 'round_robin',
+        assignTo: rule.assignTo_c,
+        createdAt: rule.CreatedOn,
+        updatedAt: rule.ModifiedOn
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching assignment rules:", error);
+      return [];
+    }
   },
 
   async getRulesByEntity(entity) {
     await delay(150);
-    return assignmentRules
-      .filter(rule => rule.entity === entity && rule.isActive)
-      .sort((a, b) => a.priority - b.priority);
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) return [];
+
+      const response = await apperClient.fetchRecords('assignment_rule_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "entity_c"}},
+          {"field": {"Name": "isActive_c"}},
+          {"field": {"Name": "priority_c"}},
+          {"field": {"Name": "criteria_c"}},
+          {"field": {"Name": "fallbackStrategy_c"}}
+        ],
+        where: [
+          {
+            "FieldName": "entity_c",
+            "Operator": "EqualTo",
+            "Values": [entity]
+          },
+          {
+            "FieldName": "isActive_c",
+            "Operator": "EqualTo",
+            "Values": [true]
+          }
+        ],
+        orderBy: [{
+          "fieldName": "priority_c",
+          "sorttype": "ASC"
+        }]
+      });
+
+      if (!response.success) return [];
+
+      return (response.data || []).map(rule => ({
+        Id: rule.Id,
+        name: rule.Name,
+        entity: rule.entity_c,
+        isActive: rule.isActive_c,
+        priority: rule.priority_c || 1,
+        criteria: rule.criteria_c ? JSON.parse(rule.criteria_c) : { conditions: [] },
+        fallbackStrategy: rule.fallbackStrategy_c || 'round_robin'
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching rules by entity:", error);
+      return [];
+    }
   },
 
   async getRuleById(id) {
     await delay(100);
-    const rule = assignmentRules.find(r => r.Id === parseInt(id));
-    if (!rule) {
-      throw new Error("Assignment rule not found");
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.getRecordById('assignment_rule_c', parseInt(id), {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "entity_c"}},
+          {"field": {"Name": "isActive_c"}},
+          {"field": {"Name": "priority_c"}},
+          {"field": {"Name": "criteria_c"}},
+          {"field": {"Name": "fallbackStrategy_c"}},
+          {"field": {"Name": "assignTo_c"}}
+        ]
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error("Assignment rule not found");
+      }
+
+      const rule = response.data;
+      return {
+        Id: rule.Id,
+        name: rule.Name,
+        entity: rule.entity_c,
+        isActive: rule.isActive_c,
+        priority: rule.priority_c || 1,
+        criteria: rule.criteria_c ? JSON.parse(rule.criteria_c) : { conditions: [] },
+        fallbackStrategy: rule.fallbackStrategy_c || 'round_robin',
+        assignTo: rule.assignTo_c
+      };
+      
+    } catch (error) {
+      console.error("Error fetching rule by ID:", error);
+      throw error;
     }
-    return { ...rule };
   },
 
   async createRule(ruleData) {
     await delay(300);
-    const newRule = {
-      Id: nextId++,
-      ...ruleData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    assignmentRules.push(newRule);
-    return { ...newRule };
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const params = {
+        records: [{
+          Name: ruleData.name,
+          entity_c: ruleData.entity,
+          isActive_c: ruleData.isActive !== false,
+          priority_c: ruleData.priority || 1,
+          criteria_c: JSON.stringify(ruleData.criteria || { conditions: [] }),
+          fallbackStrategy_c: ruleData.fallbackStrategy || 'round_robin',
+          assignTo_c: ruleData.assignTo || null
+        }]
+      };
+
+      const response = await apperClient.createRecord('assignment_rule_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results && response.results[0].success) {
+        const createdRule = response.results[0].data;
+        return {
+          Id: createdRule.Id,
+          name: createdRule.Name,
+          entity: createdRule.entity_c,
+          isActive: createdRule.isActive_c,
+          priority: createdRule.priority_c,
+          criteria: JSON.parse(createdRule.criteria_c),
+          fallbackStrategy: createdRule.fallbackStrategy_c,
+          assignTo: createdRule.assignTo_c
+        };
+      }
+
+      throw new Error("Failed to create assignment rule");
+      
+    } catch (error) {
+      console.error("Error creating rule:", error);
+      throw error;
+    }
   },
 
   async updateRule(id, updateData) {
     await delay(250);
-    const index = assignmentRules.findIndex(r => r.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Assignment rule not found");
-    }
     
-    assignmentRules[index] = {
-      ...assignmentRules[index],
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    };
-    return { ...assignmentRules[index] };
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const params = {
+        records: [{
+          Id: parseInt(id),
+          Name: updateData.name,
+          entity_c: updateData.entity,
+          isActive_c: updateData.isActive !== false,
+          priority_c: updateData.priority || 1,
+          criteria_c: JSON.stringify(updateData.criteria || { conditions: [] }),
+          fallbackStrategy_c: updateData.fallbackStrategy || 'round_robin',
+          assignTo_c: updateData.assignTo || null
+        }]
+      };
+
+      const response = await apperClient.updateRecord('assignment_rule_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results && response.results[0].success) {
+        const updatedRule = response.results[0].data;
+        return {
+          Id: updatedRule.Id,
+          name: updatedRule.Name,
+          entity: updatedRule.entity_c,
+          isActive: updatedRule.isActive_c,
+          priority: updatedRule.priority_c,
+          criteria: JSON.parse(updatedRule.criteria_c),
+          fallbackStrategy: updatedRule.fallbackStrategy_c,
+          assignTo: updatedRule.assignTo_c
+        };
+      }
+
+      throw new Error("Failed to update assignment rule");
+      
+    } catch (error) {
+      console.error("Error updating rule:", error);
+      throw error;
+    }
   },
 
   async deleteRule(id) {
     await delay(200);
-    const index = assignmentRules.findIndex(r => r.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Assignment rule not found");
-    }
     
-    assignmentRules.splice(index, 1);
-    return { success: true };
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.deleteRecord('assignment_rule_c', {
+        RecordIds: [parseInt(id)]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return { success: true };
+      
+    } catch (error) {
+      console.error("Error deleting rule:", error);
+      throw error;
+    }
   },
 
   async toggleRuleStatus(id) {
     await delay(150);
-    const rule = assignmentRules.find(r => r.Id === parseInt(id));
-    if (!rule) {
-      throw new Error("Assignment rule not found");
-    }
     
-    rule.isActive = !rule.isActive;
-    rule.updatedAt = new Date().toISOString();
-    return { ...rule };
+    try {
+      const rule = await this.getRuleById(id);
+      const updatedRule = await this.updateRule(id, {
+        ...rule,
+        isActive: !rule.isActive
+      });
+      
+      return updatedRule;
+      
+    } catch (error) {
+      console.error("Error toggling rule status:", error);
+      throw error;
+    }
   },
 
   // Auto-Assignment Core Logic
@@ -164,19 +309,6 @@ export const autoAssignmentService = {
       for (const rule of rules) {
         const assignedTo = await this.evaluateRule(rule, entityData, teamMembers);
         if (assignedTo) {
-          // Log assignment history
-          const assignment = {
-            Id: assignmentHistory.length + 1,
-            entityType: entity,
-            entityId: entityData.Id,
-            assignedTo: assignedTo,
-            assignedBy: "system",
-            assignmentReason: `Auto-assigned via rule: ${rule.name}`,
-            timestamp: new Date().toISOString(),
-            ruleId: rule.Id
-          };
-          assignmentHistory.push(assignment);
-          
           return {
             assignedTo: assignedTo,
             assignmentReason: `Auto-assigned via rule: ${rule.name}`,
@@ -254,18 +386,6 @@ export const autoAssignmentService = {
     // Sort by workload (least first)
     memberWorkloads.sort((a, b) => a.workload.totalActive - b.workload.totalActive);
     
-    const assignment = {
-      Id: assignmentHistory.length + 1,
-      entityType: entity,
-      entityId: entityData.Id,
-      assignedTo: memberWorkloads[0].Id,
-      assignedBy: "system",
-      assignmentReason: "Auto-assigned via fallback strategy (least workload)",
-      timestamp: new Date().toISOString(),
-      ruleId: null
-    };
-    assignmentHistory.push(assignment);
-    
     return {
       assignedTo: memberWorkloads[0].Id,
       assignmentReason: "Auto-assigned via fallback strategy (least workload)",
@@ -273,38 +393,28 @@ export const autoAssignmentService = {
     };
   },
 
-  // Assignment History
+  // Assignment History - Mock implementation since no history table exists
   async getAssignmentHistory(entityType, entityId) {
     await delay(100);
-    return assignmentHistory
-      .filter(h => h.entityType === entityType && h.entityId === parseInt(entityId))
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return []; // Return empty array for now
   },
 
   async getAllAssignmentHistory() {
     await delay(150);
-    return [...assignmentHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return []; // Return empty array for now
   },
 
-  // Statistics and Analytics
+  // Statistics and Analytics - Mock implementation
   async getAssignmentStats() {
     await delay(200);
-    const stats = {
-      totalAssignments: assignmentHistory.length,
-      ruleBasedAssignments: assignmentHistory.filter(h => h.ruleId).length,
-      fallbackAssignments: assignmentHistory.filter(h => !h.ruleId).length,
+    return {
+      totalAssignments: 0,
+      ruleBasedAssignments: 0,
+      fallbackAssignments: 0,
       assignmentsByEntity: {},
       assignmentsByMember: {},
-      recentActivity: assignmentHistory.slice(-10)
+      recentActivity: []
     };
-    
-    // Group by entity type
-    assignmentHistory.forEach(h => {
-      stats.assignmentsByEntity[h.entityType] = (stats.assignmentsByEntity[h.entityType] || 0) + 1;
-      stats.assignmentsByMember[h.assignedTo] = (stats.assignmentsByMember[h.assignedTo] || 0) + 1;
-    });
-    
-    return stats;
   },
 
   // Validation helpers

@@ -1,32 +1,159 @@
-import contactsData from "@/services/mockData/contacts.json";
+import { getApperClient } from '@/services/apperClient'
+import { toast } from 'react-toastify'
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-let contacts = [...contactsData]
-
 export const contactService = {
-async getAll() {
+  async getAll() {
     await delay(400)
-    return [...contacts]
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.fetchRecords('contact_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "company_c"}},
+          {"field": {"Name": "position_c"}},
+          {"field": {"Name": "avatar_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "assignmentHistory_c"}},
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "ModifiedOn"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      // Map database fields to frontend format
+      return (response.data || []).map(contact => ({
+        Id: contact.Id,
+        name: contact.Name,
+        email: contact.email_c,
+        phone: contact.phone_c,
+        company: contact.company_c,
+        position: contact.position_c,
+        avatar: contact.avatar_c,
+        assignedTo: contact.assignedTo_c,
+        assignmentHistory: contact.assignmentHistory_c ? JSON.parse(contact.assignmentHistory_c) : [],
+        tags: contact.Tags ? contact.Tags.split(',') : [],
+        createdAt: contact.CreatedOn,
+        lastContactedAt: contact.ModifiedOn
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+      return [];
+    }
   },
 
-async getByAssignee(assigneeId) {
+  async getByAssignee(assigneeId) {
     await delay(400)
     const id = parseInt(assigneeId)
     if (!id || isNaN(id)) return []
-    return contacts.filter(c => c.assignedTo === id)
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) return [];
+
+      const response = await apperClient.fetchRecords('contact_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "company_c"}},
+          {"field": {"Name": "position_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "CreatedOn"}}
+        ],
+        where: [{
+          "FieldName": "assignedTo_c",
+          "Operator": "EqualTo",
+          "Values": [id]
+        }]
+      });
+
+      if (!response.success) return [];
+
+      return (response.data || []).map(contact => ({
+        Id: contact.Id,
+        name: contact.Name,
+        email: contact.email_c,
+        phone: contact.phone_c,
+        company: contact.company_c,
+        position: contact.position_c,
+        assignedTo: contact.assignedTo_c,
+        createdAt: contact.CreatedOn
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching contacts by assignee:", error);
+      return [];
+    }
   },
 
   async getById(id) {
     await delay(200)
-    const contact = contacts.find(c => c.Id === parseInt(id))
-    if (!contact) {
-      throw new Error("Contact not found")
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.getRecordById('contact_c', parseInt(id), {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "company_c"}},
+          {"field": {"Name": "position_c"}},
+          {"field": {"Name": "avatar_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "assignmentHistory_c"}},
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "ModifiedOn"}}
+        ]
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error("Contact not found");
+      }
+
+      const contact = response.data;
+      return {
+        Id: contact.Id,
+        name: contact.Name,
+        email: contact.email_c,
+        phone: contact.phone_c,
+        company: contact.company_c,
+        position: contact.position_c,
+        avatar: contact.avatar_c,
+        assignedTo: contact.assignedTo_c,
+        assignmentHistory: contact.assignmentHistory_c ? JSON.parse(contact.assignmentHistory_c) : [],
+        tags: contact.Tags ? contact.Tags.split(',') : [],
+        createdAt: contact.CreatedOn,
+        lastContactedAt: contact.ModifiedOn
+      };
+      
+    } catch (error) {
+      console.error("Error fetching contact by ID:", error);
+      throw error;
     }
-    return { ...contact }
   },
 
-async create(contactData) {
+  async create(contactData) {
     await delay(300)
     
     // Validate required fields
@@ -39,38 +166,86 @@ async create(contactData) {
       throw new Error("Please enter a valid email address")
     }
     
-// Validate phone format if provided (basic validation)
+    // Validate phone format if provided (basic validation)
     if (contactData.phone && !/^[+]?[\d\s\-()]+$/.test(contactData.phone)) {
       throw new Error("Please enter a valid phone number")
     }
-    
-const now = new Date().toISOString()
-const newContact = {
-      ...contactData,
-      Id: Math.max(...contacts.map(c => c.Id)) + 1,
-      avatar: contactData.avatar || "",
-      tags: contactData.tags || [],
-      assignedTo: contactData.assignedTo || null,
-      assignedAt: contactData.assignedTo ? now : null,
-      assignmentHistory: contactData.assignedTo ? [{
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const now = new Date().toISOString()
+      const assignmentHistory = contactData.assignedTo ? [{
         assignedTo: contactData.assignedTo,
         assignedAt: now,
-        assignedBy: 1, // Current user - could be passed as parameter
+        assignedBy: 1, // Current user
         status: 'active'
-      }] : [],
-      createdAt: now,
-      lastContactedAt: now
+      }] : [];
+
+      const params = {
+        records: [{
+          Name: contactData.name,
+          email_c: contactData.email || '',
+          phone_c: contactData.phone || '',
+          company_c: contactData.company || '',
+          position_c: contactData.position || '',
+          avatar_c: contactData.avatar || '',
+          assignedTo_c: contactData.assignedTo || null,
+          assignmentHistory_c: assignmentHistory.length > 0 ? JSON.stringify(assignmentHistory) : '',
+          Tags: contactData.tags ? contactData.tags.join(',') : ''
+        }]
+      };
+
+      const response = await apperClient.createRecord('contact_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} contacts: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        if (successful.length > 0) {
+          const createdContact = successful[0].data;
+          return {
+            Id: createdContact.Id,
+            name: createdContact.Name,
+            email: createdContact.email_c,
+            phone: createdContact.phone_c,
+            company: createdContact.company_c,
+            position: createdContact.position_c,
+            avatar: createdContact.avatar_c,
+            assignedTo: createdContact.assignedTo_c,
+            assignmentHistory,
+            tags: contactData.tags || [],
+            createdAt: now
+          };
+        }
+      }
+
+      throw new Error("Failed to create contact");
+      
+    } catch (error) {
+      console.error("Error creating contact:", error);
+      throw error;
     }
-    contacts = [newContact, ...contacts]
-    return { ...newContact }
   },
 
-async update(id, contactData) {
+  async update(id, contactData) {
     await delay(300)
-    const index = contacts.findIndex(c => c.Id === parseInt(id))
-    if (index === -1) {
-      throw new Error("Contact not found")
-    }
     
     // Validate required fields
     if (!contactData.name?.trim()) {
@@ -82,125 +257,216 @@ async update(id, contactData) {
       throw new Error("Please enter a valid email address")
     }
     
-// Validate phone format if provided (basic validation)
+    // Validate phone format if provided (basic validation)
     if (contactData.phone && !/^[+]?[\d\s\-()]+$/.test(contactData.phone)) {
       throw new Error("Please enter a valid phone number")
     }
-    
-const now = new Date().toISOString()
-const previousAssignee = contacts[index].assignedTo
-    const newAssignee = contactData.assignedTo
-    const assignmentChanged = newAssignee !== previousAssignee
-    
-    // Prepare assignment history entry if assignment changed
-    const currentHistory = contacts[index].assignmentHistory || []
-    const newHistoryEntry = assignmentChanged ? {
-      assignedTo: newAssignee,
-      assignedAt: now,
-      assignedBy: 1, // Current user - could be passed as parameter
-      previousAssignee: previousAssignee,
-      status: newAssignee ? 'active' : 'unassigned'
-    } : null
-    
-    const updatedContact = {
-      ...contacts[index],
-      ...contactData,
-      Id: parseInt(id),
-      assignedTo: newAssignee || null,
-      assignedAt: assignmentChanged && newAssignee ? now : contacts[index].assignedAt,
-      assignmentHistory: newHistoryEntry ? [...currentHistory, newHistoryEntry] : currentHistory,
-      updatedAt: now,
-      lastContactedAt: now
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const params = {
+        records: [{
+          Id: parseInt(id),
+          Name: contactData.name,
+          email_c: contactData.email || '',
+          phone_c: contactData.phone || '',
+          company_c: contactData.company || '',
+          position_c: contactData.position || '',
+          avatar_c: contactData.avatar || '',
+          assignedTo_c: contactData.assignedTo || null,
+          assignmentHistory_c: contactData.assignmentHistory ? JSON.stringify(contactData.assignmentHistory) : '',
+          Tags: contactData.tags ? contactData.tags.join(',') : ''
+        }]
+      };
+
+      const response = await apperClient.updateRecord('contact_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} contacts: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        if (successful.length > 0) {
+          const updatedContact = successful[0].data;
+          return {
+            Id: updatedContact.Id,
+            name: updatedContact.Name,
+            email: updatedContact.email_c,
+            phone: updatedContact.phone_c,
+            company: updatedContact.company_c,
+            position: updatedContact.position_c,
+            avatar: updatedContact.avatar_c,
+            assignedTo: updatedContact.assignedTo_c,
+            assignmentHistory: contactData.assignmentHistory || [],
+            tags: contactData.tags || []
+          };
+        }
+      }
+
+      throw new Error("Failed to update contact");
+      
+    } catch (error) {
+      console.error("Error updating contact:", error);
+      throw error;
     }
-    
-    contacts[index] = updatedContact
-    return { ...updatedContact }
   },
-async delete(id) {
+
+  async delete(id) {
     await delay(200)
-    contacts = contacts.filter(c => c.Id !== parseInt(id))
-    return true
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.deleteRecord('contact_c', {
+        RecordIds: [parseInt(id)]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return true;
+      
+    } catch (error) {
+      console.error("Error deleting contact:", error);
+      throw error;
+    }
   },
 
   async bulkDelete(ids) {
     await delay(300)
-    const idsToDelete = ids.map(id => parseInt(id))
-    contacts = contacts.filter(c => !idsToDelete.includes(c.Id))
-    return { deleted: idsToDelete.length }
-  },
-async updateAvatar(id, avatarData) {
-    await delay(200)
-    const contactIndex = contacts.findIndex(c => c.Id === parseInt(id))
-    if (contactIndex === -1) {
-      throw new Error('Contact not found')
-    }
-    contacts[contactIndex] = {
-      ...contacts[contactIndex],
-      avatar: avatarData
-    }
-    return contacts[contactIndex]
-  },
-async exportToCsv() {
-    await delay(100)
-    const headers = ['Id', 'Name', 'Email', 'Phone', 'Company', 'Position', 'Created At', 'Last Contacted']
-    const csvData = [
-      headers.join(','),
-      ...contacts.map(contact => [
-        contact.Id,
-        `"${(contact.name || '').replace(/"/g, '""')}"`,
-        `"${(contact.email || '').replace(/"/g, '""')}"`,
-        `"${(contact.phone || '').replace(/"/g, '""')}"`,
-        `"${(contact.company || '').replace(/"/g, '""')}"`,
-        `"${(contact.position || '').replace(/"/g, '""')}"`,
-        contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : '',
-        contact.lastContactedAt ? new Date(contact.lastContactedAt).toLocaleDateString() : ''
-      ].join(','))
-    ].join('\n')
     
-    return csvData
-},
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.deleteRecord('contact_c', {
+        RecordIds: ids.map(id => parseInt(id))
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return { deleted: ids.length };
+      
+    } catch (error) {
+      console.error("Error bulk deleting contacts:", error);
+      throw error;
+    }
+  },
+
+  async updateAvatar(id, avatarData) {
+    await delay(200)
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const params = {
+        records: [{
+          Id: parseInt(id),
+          avatar_c: avatarData
+        }]
+      };
+
+      const response = await apperClient.updateRecord('contact_c', params);
+
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+
+      return response.results[0].data;
+      
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      throw error;
+    }
+  },
+
+  async exportToCsv() {
+    await delay(100)
+    
+    try {
+      const contacts = await this.getAll();
+      const headers = ['Id', 'Name', 'Email', 'Phone', 'Company', 'Position', 'Created At']
+      const csvData = [
+        headers.join(','),
+        ...contacts.map(contact => [
+          contact.Id,
+          `"${(contact.name || '').replace(/"/g, '""')}"`,
+          `"${(contact.email || '').replace(/"/g, '""')}"`,
+          `"${(contact.phone || '').replace(/"/g, '""')}"`,
+          `"${(contact.company || '').replace(/"/g, '""')}"`,
+          `"${(contact.position || '').replace(/"/g, '""')}"`,
+          contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : ''
+        ].join(','))
+      ].join('\n')
+      
+      return csvData;
+      
+    } catch (error) {
+      console.error("Error exporting contacts:", error);
+      throw error;
+    }
+  },
 
   async bulkAssign(contactIds, assigneeId) {
     await delay(400)
-    const now = new Date().toISOString()
-    const idsToUpdate = contactIds.map(id => parseInt(id))
     
-    // Validate assignee exists (basic validation)
-    if (assigneeId !== null && (typeof assigneeId !== 'number' || assigneeId <= 0)) {
-      throw new Error("Invalid assignee selected")
-    }
-    
-    let updatedCount = 0
-    contacts = contacts.map(contact => {
-      if (idsToUpdate.includes(contact.Id)) {
-        const previousAssignee = contact.assignedTo
-        const assignmentChanged = assigneeId !== previousAssignee
-        
-        if (assignmentChanged) {
-          const currentHistory = contact.assignmentHistory || []
-          const newHistoryEntry = {
-            assignedTo: assigneeId,
-            assignedAt: now,
-            assignedBy: 1, // Current user
-            previousAssignee: previousAssignee,
-            status: assigneeId ? 'active' : 'unassigned',
-            bulkAssignment: true
-          }
-          
-          updatedCount++
-          return {
-            ...contact,
-            assignedTo: assigneeId,
-            assignedAt: assigneeId ? now : null,
-            assignmentHistory: [...currentHistory, newHistoryEntry],
-            updatedAt: now,
-            lastContactedAt: now
-          }
-        }
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
       }
-      return contact
-    })
-    
-    return { updated: updatedCount, total: idsToUpdate.length }
+
+      const records = contactIds.map(id => ({
+        Id: parseInt(id),
+        assignedTo_c: assigneeId
+      }));
+
+      const params = { records };
+      const response = await apperClient.updateRecord('contact_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      const successful = response.results?.filter(r => r.success) || [];
+      return { updated: successful.length, total: contactIds.length };
+      
+    } catch (error) {
+      console.error("Error bulk assigning contacts:", error);
+      throw error;
+    }
   }
 }

@@ -1,9 +1,7 @@
-import leadsData from "@/services/mockData/leads.json";
-import React from "react";
+import { getApperClient } from '@/services/apperClient'
+import { toast } from 'react-toastify'
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
-
-let leads = [...leadsData]
 
 // Lead scoring configuration
 const SCORING_RULES = {
@@ -23,16 +21,14 @@ const SCORING_RULES = {
       'new': 20,
       'contacted': 40,
       'qualified': 70,
-      'proposal': 85,
-      'negotiation': 90,
-      'closed-won': 100,
-      'unqualified': 10,
-      'closed-lost': 5
+      'nurturing': 60,
+      'converted': 100,
+      'lost': 5
     }
   },
   completeness: {
     weight: 0.15,
-    fields: ['title', 'company', 'contactName', 'email', 'phone', 'value', 'budget', 'timeline', 'notes']
+    fields: ['title_c', 'company_c', 'contactName_c', 'email_c', 'phone_c', 'value_c', 'budget_c', 'timeline_c', 'notes_c']
   },
   recency: {
     weight: 0.1,
@@ -113,28 +109,214 @@ function addScoreHistory(lead, newScore, reason = 'Score updated') {
   
   return scoreHistory;
 }
+
 export const leadService = {
-async getAll() {
+  async getAll() {
     await delay(350)
-    return [...leads]
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.fetchRecords('lead_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "title_c"}},
+          {"field": {"Name": "company_c"}},
+          {"field": {"Name": "contactName_c"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "value_c"}},
+          {"field": {"Name": "budget_c"}},
+          {"field": {"Name": "timeline_c"}},
+          {"field": {"Name": "source_c"}},
+          {"field": {"Name": "stage_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "assignmentHistory_c"}},
+          {"field": {"Name": "qualification_c"}},
+          {"field": {"Name": "score_c"}},
+          {"field": {"Name": "scoreHistory_c"}},
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "ModifiedOn"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      // Map database fields to frontend format
+      return (response.data || []).map(lead => {
+        const mappedLead = {
+          Id: lead.Id,
+          title: lead.title_c || lead.Name,
+          company: lead.company_c,
+          contactName: lead.contactName_c,
+          email: lead.email_c,
+          phone: lead.phone_c,
+          value: parseFloat(lead.value_c) || null,
+          budget: parseFloat(lead.budget_c) || null,
+          timeline: lead.timeline_c,
+          source: lead.source_c || 'website',
+          stage: lead.stage_c || 'new',
+          notes: lead.notes_c,
+          assignedTo: lead.assignedTo_c,
+          assignmentHistory: lead.assignmentHistory_c ? JSON.parse(lead.assignmentHistory_c) : [],
+          qualification: lead.qualification_c ? JSON.parse(lead.qualification_c) : {
+            budget: false,
+            authority: false,
+            need: false,
+            timeline: false,
+            decisionProcess: false,
+            competition: false,
+            fit: false
+          },
+          score: parseInt(lead.score_c) || 0,
+          scoreHistory: lead.scoreHistory_c ? JSON.parse(lead.scoreHistory_c) : [],
+          tags: lead.Tags ? lead.Tags.split(',') : [],
+          createdAt: lead.CreatedOn,
+          updatedAt: lead.ModifiedOn
+        };
+        
+        // Recalculate score if not present
+        if (!mappedLead.score) {
+          mappedLead.score = calculateLeadScore(mappedLead);
+        }
+        
+        return mappedLead;
+      });
+      
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      return [];
+    }
   },
 
   async getByAssignee(assigneeId) {
-await delay(350)
+    await delay(350)
     const id = parseInt(assigneeId)
     if (!id || isNaN(id)) return []
-    return leads.filter(l => l.assignedTo === id)
-  },
-  async getById(id) {
-    await delay(200)
-    const lead = leads.find(l => l.Id === parseInt(id))
-    if (!lead) {
-      throw new Error("Lead not found")
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) return [];
+
+      const response = await apperClient.fetchRecords('lead_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "title_c"}},
+          {"field": {"Name": "company_c"}},
+          {"field": {"Name": "stage_c"}},
+          {"field": {"Name": "value_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "score_c"}},
+          {"field": {"Name": "CreatedOn"}}
+        ],
+        where: [{
+          "FieldName": "assignedTo_c",
+          "Operator": "EqualTo",
+          "Values": [id]
+        }]
+      });
+
+      if (!response.success) return [];
+
+      return (response.data || []).map(lead => ({
+        Id: lead.Id,
+        title: lead.title_c || lead.Name,
+        company: lead.company_c,
+        stage: lead.stage_c || 'new',
+        value: parseFloat(lead.value_c) || null,
+        assignedTo: lead.assignedTo_c,
+        score: parseInt(lead.score_c) || 0,
+        createdAt: lead.CreatedOn
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching leads by assignee:", error);
+      return [];
     }
-    return { ...lead }
   },
 
-async create(leadData) {
+  async getById(id) {
+    await delay(200)
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.getRecordById('lead_c', parseInt(id), {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "title_c"}},
+          {"field": {"Name": "company_c"}},
+          {"field": {"Name": "contactName_c"}},
+          {"field": {"Name": "email_c"}},
+          {"field": {"Name": "phone_c"}},
+          {"field": {"Name": "value_c"}},
+          {"field": {"Name": "budget_c"}},
+          {"field": {"Name": "timeline_c"}},
+          {"field": {"Name": "source_c"}},
+          {"field": {"Name": "stage_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "assignedTo_c"}},
+          {"field": {"Name": "assignmentHistory_c"}},
+          {"field": {"Name": "qualification_c"}},
+          {"field": {"Name": "score_c"}},
+          {"field": {"Name": "scoreHistory_c"}},
+          {"field": {"Name": "Tags"}}
+        ]
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error("Lead not found");
+      }
+
+      const lead = response.data;
+      return {
+        Id: lead.Id,
+        title: lead.title_c || lead.Name,
+        company: lead.company_c,
+        contactName: lead.contactName_c,
+        email: lead.email_c,
+        phone: lead.phone_c,
+        value: parseFloat(lead.value_c) || null,
+        budget: parseFloat(lead.budget_c) || null,
+        timeline: lead.timeline_c,
+        source: lead.source_c || 'website',
+        stage: lead.stage_c || 'new',
+        notes: lead.notes_c,
+        assignedTo: lead.assignedTo_c,
+        assignmentHistory: lead.assignmentHistory_c ? JSON.parse(lead.assignmentHistory_c) : [],
+        qualification: lead.qualification_c ? JSON.parse(lead.qualification_c) : {
+          budget: false,
+          authority: false,
+          need: false,
+          timeline: false,
+          decisionProcess: false,
+          competition: false,
+          fit: false
+        },
+        score: parseInt(lead.score_c) || 0,
+        scoreHistory: lead.scoreHistory_c ? JSON.parse(lead.scoreHistory_c) : [],
+        tags: lead.Tags ? lead.Tags.split(',') : []
+      };
+      
+    } catch (error) {
+      console.error("Error fetching lead by ID:", error);
+      throw error;
+    }
+  },
+
+  async create(leadData) {
     await delay(300)
     
     // Validate required fields
@@ -145,27 +327,15 @@ async create(leadData) {
     if (leadData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadData.email)) {
       throw new Error("Please enter a valid email address")
     }
-    
-    const now = new Date().toISOString();
-const newLead = {
-      ...leadData,
-      Id: Math.max(...leads.map(l => l.Id), 0) + 1,
-      stage: leadData.stage || 'new',
-      source: leadData.source || 'website',
-      value: leadData.value ? parseFloat(leadData.value) : null,
-      budget: leadData.budget ? parseFloat(leadData.budget) : null,
-      timeline: leadData.timeline || null,
-      assignedTo: leadData.assignedTo || null,
-      assignedAt: leadData.assignedTo ? now : null,
-      assignmentHistory: leadData.assignedTo ? [{
-        assignedTo: leadData.assignedTo,
-        assignedAt: now,
-        assignedBy: 1, // Current user
-        status: 'active'
-      }] : [],
-      createdAt: now,
-      updatedAt: now,
-      qualification: leadData.qualification || {
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const now = new Date().toISOString()
+      const qualification = leadData.qualification || {
         budget: false,
         authority: false,
         need: false,
@@ -173,90 +343,237 @@ const newLead = {
         decisionProcess: false,
         competition: false,
         fit: false
+      };
+
+      const assignmentHistory = leadData.assignedTo ? [{
+        assignedTo: leadData.assignedTo,
+        assignedAt: now,
+        assignedBy: 1, // Current user
+        status: 'active'
+      }] : [];
+
+      // Calculate initial score
+      const leadForScore = {
+        ...leadData,
+        stage: leadData.stage || 'new',
+        qualification,
+        createdAt: now,
+        updatedAt: now
+      };
+      const score = calculateLeadScore(leadForScore);
+      const scoreHistory = addScoreHistory(leadForScore, score, 'Lead created');
+
+      const params = {
+        records: [{
+          Name: leadData.title,
+          title_c: leadData.title,
+          company_c: leadData.company,
+          contactName_c: leadData.contactName || '',
+          email_c: leadData.email || '',
+          phone_c: leadData.phone || '',
+          value_c: leadData.value ? parseFloat(leadData.value) : null,
+          budget_c: leadData.budget ? parseFloat(leadData.budget) : null,
+          timeline_c: leadData.timeline || '',
+          source_c: leadData.source || 'website',
+          stage_c: leadData.stage || 'new',
+          notes_c: leadData.notes || '',
+          assignedTo_c: leadData.assignedTo || null,
+          assignmentHistory_c: assignmentHistory.length > 0 ? JSON.stringify(assignmentHistory) : '',
+          qualification_c: JSON.stringify(qualification),
+          score_c: score,
+          scoreHistory_c: JSON.stringify(scoreHistory),
+          Tags: leadData.tags ? leadData.tags.join(',') : ''
+        }]
+      };
+
+      const response = await apperClient.createRecord('lead_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
       }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} leads: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        if (successful.length > 0) {
+          const createdLead = successful[0].data;
+          return {
+            Id: createdLead.Id,
+            title: createdLead.title_c,
+            company: createdLead.company_c,
+            contactName: createdLead.contactName_c,
+            email: createdLead.email_c,
+            phone: createdLead.phone_c,
+            value: parseFloat(createdLead.value_c) || null,
+            budget: parseFloat(createdLead.budget_c) || null,
+            timeline: createdLead.timeline_c,
+            source: createdLead.source_c,
+            stage: createdLead.stage_c,
+            notes: createdLead.notes_c,
+            assignedTo: createdLead.assignedTo_c,
+            assignmentHistory,
+            qualification,
+            score,
+            scoreHistory,
+            tags: leadData.tags || [],
+            createdAt: now
+          };
+        }
+      }
+
+      throw new Error("Failed to create lead");
+      
+    } catch (error) {
+      console.error("Error creating lead:", error);
+      throw error;
     }
-    
-    // Calculate initial score
-    newLead.score = calculateLeadScore(newLead);
-    newLead.scoreHistory = addScoreHistory(newLead, newLead.score, 'Lead created');
-    
-    leads = [newLead, ...leads]
-    return { ...newLead }
   },
 
-async update(id, leadData) {
+  async update(id, leadData) {
     await delay(300)
-    const index = leads.findIndex(l => l.Id === parseInt(id))
-    if (index === -1) {
-      throw new Error("Lead not found")
-    }
     
     // Validate email if provided
     if (leadData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(leadData.email)) {
       throw new Error("Please enter a valid email address")
     }
-    
-    const previousLead = leads[index];
-const previousAssignee = previousLead.assignedTo
-    const newAssignee = leadData.assignedTo
-    const now = new Date().toISOString()
-    const assignmentChanged = newAssignee !== previousAssignee
-    
-    // Prepare assignment history entry if assignment changed
-    const currentHistory = previousLead.assignmentHistory || []
-    const newHistoryEntry = assignmentChanged ? {
-      assignedTo: newAssignee,
-      assignedAt: now,
-      assignedBy: 1, // Current user
-      previousAssignee: previousAssignee,
-      status: newAssignee ? 'active' : 'unassigned'
-    } : null
-    
-    const updatedLead = {
-      ...previousLead,
-      ...leadData,
-      Id: parseInt(id),
-      value: leadData.value ? parseFloat(leadData.value) : previousLead.value,
-      budget: leadData.budget ? parseFloat(leadData.budget) : previousLead.budget,
-      timeline: leadData.timeline || previousLead.timeline,
-      assignedTo: newAssignee || null,
-      assignedAt: assignmentChanged && newAssignee ? now : previousLead.assignedAt,
-      assignmentHistory: newHistoryEntry ? [...currentHistory, newHistoryEntry] : currentHistory,
-      qualification: leadData.qualification || previousLead.qualification || {
-        budget: false,
-        authority: false,
-        need: false,
-        timeline: false,
-        decisionProcess: false,
-        competition: false,
-        fit: false
-      },
-      updatedAt: now
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      // Recalculate score
+      const score = calculateLeadScore(leadData);
+      const scoreHistory = addScoreHistory(leadData, score, 'Lead updated');
+
+      const params = {
+        records: [{
+          Id: parseInt(id),
+          Name: leadData.title,
+          title_c: leadData.title,
+          company_c: leadData.company,
+          contactName_c: leadData.contactName || '',
+          email_c: leadData.email || '',
+          phone_c: leadData.phone || '',
+          value_c: leadData.value ? parseFloat(leadData.value) : null,
+          budget_c: leadData.budget ? parseFloat(leadData.budget) : null,
+          timeline_c: leadData.timeline || '',
+          source_c: leadData.source || 'website',
+          stage_c: leadData.stage || 'new',
+          notes_c: leadData.notes || '',
+          assignedTo_c: leadData.assignedTo || null,
+          assignmentHistory_c: leadData.assignmentHistory ? JSON.stringify(leadData.assignmentHistory) : '',
+          qualification_c: leadData.qualification ? JSON.stringify(leadData.qualification) : '',
+          score_c: score,
+          scoreHistory_c: JSON.stringify(scoreHistory),
+          Tags: leadData.tags ? leadData.tags.join(',') : ''
+        }]
+      };
+
+      const response = await apperClient.updateRecord('lead_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} leads: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        if (successful.length > 0) {
+          const updatedLead = successful[0].data;
+          return {
+            Id: updatedLead.Id,
+            title: updatedLead.title_c,
+            company: updatedLead.company_c,
+            contactName: updatedLead.contactName_c,
+            email: updatedLead.email_c,
+            phone: updatedLead.phone_c,
+            value: parseFloat(updatedLead.value_c) || null,
+            budget: parseFloat(updatedLead.budget_c) || null,
+            timeline: updatedLead.timeline_c,
+            source: updatedLead.source_c,
+            stage: updatedLead.stage_c,
+            notes: updatedLead.notes_c,
+            assignedTo: updatedLead.assignedTo_c,
+            assignmentHistory: leadData.assignmentHistory || [],
+            qualification: leadData.qualification || {},
+            score,
+            scoreHistory,
+            tags: leadData.tags || []
+          };
+        }
+      }
+
+      throw new Error("Failed to update lead");
+      
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      throw error;
     }
-    
-    // Recalculate score
-    const previousScore = previousLead.score || 0;
-    updatedLead.score = calculateLeadScore(updatedLead);
-    updatedLead.scoreHistory = addScoreHistory(updatedLead, updatedLead.score, 
-      previousScore !== updatedLead.score ? 'Lead updated' : 'No score change');
-    
-    leads[index] = updatedLead
-    return { ...updatedLead }
   },
 
-async delete(id) {
+  async delete(id) {
     await delay(200)
-    leads = leads.filter(l => l.Id !== parseInt(id))
-    return true
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.deleteRecord('lead_c', {
+        RecordIds: [parseInt(id)]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return true;
+      
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      throw error;
+    }
   },
 
   // Get leads sorted by score (highest first)
   async getLeadsByScore() {
     await delay(200)
-    return leads
-      .slice()
-      .sort((a, b) => (b.score || 0) - (a.score || 0))
-      .map(lead => ({ ...lead }))
+    
+    try {
+      const leads = await this.getAll();
+      return leads
+        .slice()
+        .sort((a, b) => (b.score || 0) - (a.score || 0));
+      
+    } catch (error) {
+      console.error("Error fetching leads by score:", error);
+      return [];
+    }
   },
   
   // Get scoring rules configuration
@@ -267,66 +584,53 @@ async delete(id) {
   // Recalculate all lead scores (useful for rule updates)
   async recalculateAllScores() {
     await delay(500)
-    leads = leads.map(lead => {
-      const previousScore = lead.score || 0;
-      const newScore = calculateLeadScore(lead);
-      return {
-        ...lead,
-        score: newScore,
-        scoreHistory: addScoreHistory(lead, newScore, 'Bulk recalculation'),
-        updatedAt: new Date().toISOString()
-      }
-    });
-    return leads.map(lead => ({ ...lead }))
-},
+    
+    try {
+      const leads = await this.getAll();
+      const updatePromises = leads.map(lead => {
+        const newScore = calculateLeadScore(lead);
+        const scoreHistory = addScoreHistory(lead, newScore, 'Bulk recalculation');
+        return this.update(lead.Id, { ...lead, score: newScore, scoreHistory });
+      });
+      
+      const results = await Promise.all(updatePromises);
+      return results;
+      
+    } catch (error) {
+      console.error("Error recalculating all lead scores:", error);
+      return [];
+    }
+  },
 
   async bulkAssign(leadIds, assigneeId) {
     await delay(400)
-    const now = new Date().toISOString()
-    const idsToUpdate = leadIds.map(id => parseInt(id))
     
-    // Validate assignee exists (basic validation)
-    if (assigneeId !== null && (typeof assigneeId !== 'number' || assigneeId <= 0)) {
-      throw new Error("Invalid assignee selected")
-    }
-    
-    let updatedCount = 0
-    leads = leads.map(lead => {
-      if (idsToUpdate.includes(lead.Id)) {
-        const previousAssignee = lead.assignedTo
-        const assignmentChanged = assigneeId !== previousAssignee
-        
-        if (assignmentChanged) {
-          const currentHistory = lead.assignmentHistory || []
-          const newHistoryEntry = {
-            assignedTo: assigneeId,
-            assignedAt: now,
-            assignedBy: 1, // Current user
-            previousAssignee: previousAssignee,
-            status: assigneeId ? 'active' : 'unassigned',
-            bulkAssignment: true
-          }
-          
-          updatedCount++
-          const updatedLead = {
-            ...lead,
-            assignedTo: assigneeId,
-            assignedAt: assigneeId ? now : null,
-            assignmentHistory: [...currentHistory, newHistoryEntry],
-            updatedAt: now
-          }
-          
-          // Recalculate score for assignment change
-          const previousScore = lead.score || 0
-          updatedLead.score = calculateLeadScore(updatedLead)
-          updatedLead.scoreHistory = addScoreHistory(updatedLead, updatedLead.score, 'Bulk assignment')
-          
-          return updatedLead
-        }
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
       }
-      return lead
-    })
-    
-    return { updated: updatedCount, total: idsToUpdate.length }
+
+      const records = leadIds.map(id => ({
+        Id: parseInt(id),
+        assignedTo_c: assigneeId
+      }));
+
+      const params = { records };
+      const response = await apperClient.updateRecord('lead_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      const successful = response.results?.filter(r => r.success) || [];
+      return { updated: successful.length, total: leadIds.length };
+      
+    } catch (error) {
+      console.error("Error bulk assigning leads:", error);
+      throw error;
+    }
   }
 }

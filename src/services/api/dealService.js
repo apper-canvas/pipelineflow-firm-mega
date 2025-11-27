@@ -1,338 +1,587 @@
-import dealsData from "@/services/mockData/deals.json"
+import { getApperClient } from '@/services/apperClient'
+import { toast } from 'react-toastify'
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-let deals = [...dealsData]
-
 export const dealService = {
-async getAll() {
+  async getAll() {
     await delay(400)
-    return [...deals]
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.fetchRecords('deal_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "title_c"}},
+          {"field": {"Name": "amount_c"}},
+          {"field": {"Name": "stage_c"}},
+          {"field": {"Name": "probability_c"}},
+          {"field": {"Name": "closeDate_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "dealOwner_c"}},
+          {"field": {"Name": "assignmentHistory_c"}},
+          {"field": {"Name": "stageHistory_c"}},
+          {"field": {"Name": "contactId_c"}},
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "ModifiedOn"}}
+        ]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      // Map database fields to frontend format
+      return (response.data || []).map(deal => ({
+        Id: deal.Id,
+        title: deal.title_c || deal.Name,
+        amount: parseFloat(deal.amount_c) || 0,
+        stage: deal.stage_c || 'new',
+        probability: parseInt(deal.probability_c) || 25,
+        closeDate: deal.closeDate_c,
+        notes: deal.notes_c,
+        dealOwner: deal.dealOwner_c,
+        assignmentHistory: deal.assignmentHistory_c ? JSON.parse(deal.assignmentHistory_c) : [],
+        stageHistory: deal.stageHistory_c ? JSON.parse(deal.stageHistory_c) : [],
+        contactId: deal.contactId_c?.Id || deal.contactId_c,
+        contactName: deal.contactId_c?.Name,
+        tags: deal.Tags ? deal.Tags.split(',') : [],
+        createdAt: deal.CreatedOn,
+        updatedAt: deal.ModifiedOn
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching deals:", error);
+      return [];
+    }
   },
 
-async getByAssignee(assigneeId) {
+  async getByAssignee(assigneeId) {
     await delay(400)
     const id = parseInt(assigneeId)
     if (!id || isNaN(id)) return []
-    return deals.filter(d => d.dealOwner === id)
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) return [];
+
+      const response = await apperClient.fetchRecords('deal_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "title_c"}},
+          {"field": {"Name": "amount_c"}},
+          {"field": {"Name": "stage_c"}},
+          {"field": {"Name": "dealOwner_c"}},
+          {"field": {"Name": "CreatedOn"}}
+        ],
+        where: [{
+          "FieldName": "dealOwner_c",
+          "Operator": "EqualTo",
+          "Values": [id]
+        }]
+      });
+
+      if (!response.success) return [];
+
+      return (response.data || []).map(deal => ({
+        Id: deal.Id,
+        title: deal.title_c || deal.Name,
+        amount: parseFloat(deal.amount_c) || 0,
+        stage: deal.stage_c || 'new',
+        dealOwner: deal.dealOwner_c,
+        createdAt: deal.CreatedOn
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching deals by assignee:", error);
+      return [];
+    }
   },
 
   async getById(id) {
     await delay(200)
-    const deal = deals.find(d => d.Id === parseInt(id))
-    if (!deal) {
-      throw new Error("Deal not found")
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.getRecordById('deal_c', parseInt(id), {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "title_c"}},
+          {"field": {"Name": "amount_c"}},
+          {"field": {"Name": "stage_c"}},
+          {"field": {"Name": "probability_c"}},
+          {"field": {"Name": "closeDate_c"}},
+          {"field": {"Name": "notes_c"}},
+          {"field": {"Name": "dealOwner_c"}},
+          {"field": {"Name": "assignmentHistory_c"}},
+          {"field": {"Name": "stageHistory_c"}},
+          {"field": {"Name": "contactId_c"}},
+          {"field": {"Name": "Tags"}}
+        ]
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error("Deal not found");
+      }
+
+      const deal = response.data;
+      return {
+        Id: deal.Id,
+        title: deal.title_c || deal.Name,
+        amount: parseFloat(deal.amount_c) || 0,
+        stage: deal.stage_c || 'new',
+        probability: parseInt(deal.probability_c) || 25,
+        closeDate: deal.closeDate_c,
+        notes: deal.notes_c,
+        dealOwner: deal.dealOwner_c,
+        assignmentHistory: deal.assignmentHistory_c ? JSON.parse(deal.assignmentHistory_c) : [],
+        stageHistory: deal.stageHistory_c ? JSON.parse(deal.stageHistory_c) : [],
+        contactId: deal.contactId_c?.Id || deal.contactId_c,
+        contactName: deal.contactId_c?.Name,
+        tags: deal.Tags ? deal.Tags.split(',') : []
+      };
+      
+    } catch (error) {
+      console.error("Error fetching deal by ID:", error);
+      throw error;
     }
-    return { ...deal }
   },
 
-async create(dealData) {
+  async create(dealData) {
     await delay(350)
-    const now = new Date().toISOString()
-const newDeal = {
-      ...dealData,
-      Id: Math.max(...deals.map(d => d.Id)) + 1,
-      amount: parseFloat(dealData.amount) || 0,
-      probability: parseInt(dealData.probability) || 25,
-      dealOwner: dealData.dealOwner || null,
-      assignedAt: dealData.dealOwner ? now : null,
-      assignmentHistory: dealData.dealOwner ? [{
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const now = new Date().toISOString()
+      const assignmentHistory = dealData.dealOwner ? [{
         assignedTo: dealData.dealOwner,
         assignedAt: now,
         assignedBy: 1, // Current user
         status: 'active'
-      }] : [],
-      createdAt: now,
-      updatedAt: now,
-      stageChangedAt: dealData.stageChangedAt || now,
-      stageHistory: [{
+      }] : [];
+
+      const stageHistory = [{
         stage: dealData.stage || 'new',
         enteredAt: now,
         duration: 0
-      }]
-    }
-    deals = [newDeal, ...deals]
-    return { ...newDeal }
-  },
+      }];
 
-async update(id, dealData) {
-    await delay(350)
-    const index = deals.findIndex(d => d.Id === parseInt(id))
-    if (index === -1) {
-      throw new Error("Deal not found")
-    }
-    
-    const now = new Date().toISOString()
-    const currentDeal = deals[index]
-    
-const previousOwner = currentDeal.dealOwner
-    const newOwner = dealData.dealOwner
-    const assignmentChanged = newOwner !== previousOwner
-    
-    // Prepare assignment history entry if assignment changed
-    const currentHistory = currentDeal.assignmentHistory || []
-    const newHistoryEntry = assignmentChanged ? {
-      assignedTo: newOwner,
-      assignedAt: now,
-      assignedBy: 1, // Current user
-      previousAssignee: previousOwner,
-      status: newOwner ? 'active' : 'unassigned'
-    } : null
-    
-    const updatedDeal = {
-      ...currentDeal,
-      ...dealData,
-      Id: parseInt(id),
-      amount: parseFloat(dealData.amount) || currentDeal.amount,
-      probability: parseInt(dealData.probability) || currentDeal.probability,
-      dealOwner: newOwner || null,
-      assignedAt: assignmentChanged && newOwner ? now : currentDeal.assignedAt,
-      assignmentHistory: newHistoryEntry ? [...currentHistory, newHistoryEntry] : currentHistory,
-      updatedAt: now
-    }
-    
-    deals[index] = updatedDeal
-    return { ...updatedDeal }
-  },
+      const params = {
+        records: [{
+          Name: dealData.title || 'New Deal',
+          title_c: dealData.title || '',
+          amount_c: parseFloat(dealData.amount) || 0,
+          stage_c: dealData.stage || 'new',
+          probability_c: parseInt(dealData.probability) || 25,
+          closeDate_c: dealData.closeDate || '',
+          notes_c: dealData.notes || '',
+          dealOwner_c: dealData.dealOwner || null,
+          assignmentHistory_c: JSON.stringify(assignmentHistory),
+          stageHistory_c: JSON.stringify(stageHistory),
+          contactId_c: dealData.contactId || null,
+          Tags: dealData.tags ? dealData.tags.join(',') : ''
+        }]
+      };
 
-async updateStage(id, newStage) {
-    await delay(350)
-    const index = deals.findIndex(d => d.Id === parseInt(id))
-    if (index === -1) {
-      throw new Error("Deal not found")
-    }
-    
-    const now = new Date().toISOString()
-    const currentDeal = deals[index]
-    
-    // Calculate duration in current stage
-    const currentStageDuration = currentDeal.stageChangedAt 
-      ? new Date(now) - new Date(currentDeal.stageChangedAt)
-      : 0
-    
-    // Update stage history
-    const updatedHistory = [...(currentDeal.stageHistory || [])]
-    
-    // Update the last entry with exit time and duration
-    if (updatedHistory.length > 0) {
-      const lastEntry = updatedHistory[updatedHistory.length - 1]
-      lastEntry.exitedAt = now
-      lastEntry.duration = currentStageDuration
-    }
-    
-    // Add new stage entry
-    updatedHistory.push({
-      stage: newStage,
-      enteredAt: now,
-      duration: 0
-    })
-    
-    const updatedDeal = {
-      ...currentDeal,
-      stage: newStage,
-      stageChangedAt: now,
-      stageHistory: updatedHistory,
-      updatedAt: now
-    }
-    
-    deals[index] = updatedDeal
-    return { ...updatedDeal }
-  },
+      const response = await apperClient.createRecord('deal_c', params);
 
-async delete(id) {
-    await delay(200)
-    deals = deals.filter(d => d.Id !== parseInt(id))
-    return true
-  },
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
 
-async bulkUpdateStage(dealIds, stage) {
-    await delay(400)
-    const now = new Date().toISOString()
-    
-    dealIds.forEach(id => {
-      const index = deals.findIndex(d => d.Id === parseInt(id))
-      if (index !== -1) {
-        const currentDeal = deals[index]
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
         
-        // Calculate duration in current stage
-        const currentStageDuration = currentDeal.stageChangedAt 
-          ? new Date(now) - new Date(currentDeal.stageChangedAt)
-          : 0
-        
-        // Update stage history
-        const updatedHistory = [...(currentDeal.stageHistory || [])]
-        
-        if (updatedHistory.length > 0) {
-          const lastEntry = updatedHistory[updatedHistory.length - 1]
-          lastEntry.exitedAt = now
-          lastEntry.duration = currentStageDuration
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} deals: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
         }
-        
-        updatedHistory.push({
-          stage: stage,
-          enteredAt: now,
-          duration: 0
-        })
-        
-deals[index] = {
-          ...currentDeal,
-          stage,
-          stageChangedAt: now,
-          stageHistory: updatedHistory,
-          updatedAt: now
+
+        if (successful.length > 0) {
+          const createdDeal = successful[0].data;
+          return {
+            Id: createdDeal.Id,
+            title: createdDeal.title_c,
+            amount: parseFloat(createdDeal.amount_c) || 0,
+            stage: createdDeal.stage_c,
+            probability: parseInt(createdDeal.probability_c) || 25,
+            closeDate: createdDeal.closeDate_c,
+            notes: createdDeal.notes_c,
+            dealOwner: createdDeal.dealOwner_c,
+            assignmentHistory,
+            stageHistory,
+            contactId: createdDeal.contactId_c,
+            tags: dealData.tags || [],
+            createdAt: now
+          };
         }
       }
-    })
-    return true
+
+      throw new Error("Failed to create deal");
+      
+    } catch (error) {
+      console.error("Error creating deal:", error);
+      throw error;
+    }
+  },
+
+  async update(id, dealData) {
+    await delay(350)
+
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const params = {
+        records: [{
+          Id: parseInt(id),
+          Name: dealData.title || 'Deal',
+          title_c: dealData.title || '',
+          amount_c: parseFloat(dealData.amount) || 0,
+          stage_c: dealData.stage || 'new',
+          probability_c: parseInt(dealData.probability) || 25,
+          closeDate_c: dealData.closeDate || '',
+          notes_c: dealData.notes || '',
+          dealOwner_c: dealData.dealOwner || null,
+          assignmentHistory_c: dealData.assignmentHistory ? JSON.stringify(dealData.assignmentHistory) : '',
+          stageHistory_c: dealData.stageHistory ? JSON.stringify(dealData.stageHistory) : '',
+          contactId_c: dealData.contactId || null,
+          Tags: dealData.tags ? dealData.tags.join(',') : ''
+        }]
+      };
+
+      const response = await apperClient.updateRecord('deal_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+        
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} deals: ${JSON.stringify(failed)}`);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        if (successful.length > 0) {
+          const updatedDeal = successful[0].data;
+          return {
+            Id: updatedDeal.Id,
+            title: updatedDeal.title_c,
+            amount: parseFloat(updatedDeal.amount_c) || 0,
+            stage: updatedDeal.stage_c,
+            probability: parseInt(updatedDeal.probability_c) || 25,
+            closeDate: updatedDeal.closeDate_c,
+            notes: updatedDeal.notes_c,
+            dealOwner: updatedDeal.dealOwner_c,
+            assignmentHistory: dealData.assignmentHistory || [],
+            stageHistory: dealData.stageHistory || [],
+            contactId: updatedDeal.contactId_c,
+            tags: dealData.tags || []
+          };
+        }
+      }
+
+      throw new Error("Failed to update deal");
+      
+    } catch (error) {
+      console.error("Error updating deal:", error);
+      throw error;
+    }
+  },
+
+  async updateStage(id, newStage) {
+    await delay(350)
+    
+    try {
+      // First get current deal to update stage history
+      const currentDeal = await this.getById(id);
+      const now = new Date().toISOString();
+      
+      // Calculate duration in current stage
+      const currentStageEntry = currentDeal.stageHistory?.[currentDeal.stageHistory.length - 1];
+      const currentStageDuration = currentStageEntry?.enteredAt 
+        ? new Date(now) - new Date(currentStageEntry.enteredAt)
+        : 0;
+      
+      // Update stage history
+      const updatedHistory = [...(currentDeal.stageHistory || [])];
+      
+      // Update the last entry with exit time and duration
+      if (updatedHistory.length > 0) {
+        const lastEntry = updatedHistory[updatedHistory.length - 1];
+        lastEntry.exitedAt = now;
+        lastEntry.duration = currentStageDuration;
+      }
+      
+      // Add new stage entry
+      updatedHistory.push({
+        stage: newStage,
+        enteredAt: now,
+        duration: 0
+      });
+
+      return await this.update(id, {
+        ...currentDeal,
+        stage: newStage,
+        stageHistory: updatedHistory
+      });
+      
+    } catch (error) {
+      console.error("Error updating deal stage:", error);
+      throw error;
+    }
+  },
+
+  async delete(id) {
+    await delay(200)
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
+      }
+
+      const response = await apperClient.deleteRecord('deal_c', {
+        RecordIds: [parseInt(id)]
+      });
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      return true;
+      
+    } catch (error) {
+      console.error("Error deleting deal:", error);
+      throw error;
+    }
+  },
+
+  async bulkUpdateStage(dealIds, stage) {
+    await delay(400)
+    
+    try {
+      const updatePromises = dealIds.map(id => this.updateStage(parseInt(id), stage));
+      await Promise.all(updatePromises);
+      return true;
+      
+    } catch (error) {
+      console.error("Error bulk updating deal stages:", error);
+      throw error;
+    }
   },
 
   async getByStage(stage) {
     await delay(300)
-    return deals.filter(d => d.stage === stage)
-},
+    
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) return [];
+
+      const response = await apperClient.fetchRecords('deal_c', {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "title_c"}},
+          {"field": {"Name": "amount_c"}},
+          {"field": {"Name": "stage_c"}}
+        ],
+        where: [{
+          "FieldName": "stage_c",
+          "Operator": "EqualTo",
+          "Values": [stage]
+        }]
+      });
+
+      if (!response.success) return [];
+
+      return (response.data || []).map(deal => ({
+        Id: deal.Id,
+        title: deal.title_c || deal.Name,
+        amount: parseFloat(deal.amount_c) || 0,
+        stage: deal.stage_c
+      }));
+      
+    } catch (error) {
+      console.error("Error fetching deals by stage:", error);
+      return [];
+    }
+  },
 
   async getStageDurationAnalytics() {
     await delay(200)
     
-    // Calculate average duration per stage from completed transitions
-    const stageAnalytics = {}
-    const currentStageData = {}
-    
-    deals.forEach(deal => {
-      if (deal.stageHistory) {
-        deal.stageHistory.forEach(entry => {
-          if (!stageAnalytics[entry.stage]) {
-            stageAnalytics[entry.stage] = {
-              totalDuration: 0,
-              completedTransitions: 0,
-              averageDuration: 0
-            }
-          }
-          
-          if (entry.duration > 0) {
-            stageAnalytics[entry.stage].totalDuration += entry.duration
-            stageAnalytics[entry.stage].completedTransitions += 1
-          }
-        })
-      }
+    try {
+      const deals = await this.getAll();
+      const stageAnalytics = {};
+      const currentStageData = {};
       
-      // Track current stage durations
-      if (deal.stageChangedAt) {
-        const currentDuration = new Date() - new Date(deal.stageChangedAt)
-        if (!currentStageData[deal.stage]) {
-          currentStageData[deal.stage] = {
-            totalCurrentDuration: 0,
-            activeDeals: 0,
-            averageCurrentDuration: 0
-          }
+      deals.forEach(deal => {
+        if (deal.stageHistory) {
+          deal.stageHistory.forEach(entry => {
+            if (!stageAnalytics[entry.stage]) {
+              stageAnalytics[entry.stage] = {
+                totalDuration: 0,
+                completedTransitions: 0,
+                averageDuration: 0
+              };
+            }
+            
+            if (entry.duration > 0) {
+              stageAnalytics[entry.stage].totalDuration += entry.duration;
+              stageAnalytics[entry.stage].completedTransitions += 1;
+            }
+          });
         }
-        currentStageData[deal.stage].totalCurrentDuration += currentDuration
-        currentStageData[deal.stage].activeDeals += 1
-      }
-    })
-    
-    // Calculate averages
-    Object.keys(stageAnalytics).forEach(stage => {
-      const data = stageAnalytics[stage]
-      if (data.completedTransitions > 0) {
-        data.averageDuration = data.totalDuration / data.completedTransitions
-      }
-    })
-    
-    Object.keys(currentStageData).forEach(stage => {
-      const data = currentStageData[stage]
-      if (data.activeDeals > 0) {
-        data.averageCurrentDuration = data.totalCurrentDuration / data.activeDeals
-      }
-    })
-    
-    return {
-      historicalStageMetrics: stageAnalytics,
-      currentStageMetrics: currentStageData
+        
+        // Track current stage durations
+        const currentStageEntry = deal.stageHistory?.[deal.stageHistory.length - 1];
+        if (currentStageEntry?.enteredAt) {
+          const currentDuration = new Date() - new Date(currentStageEntry.enteredAt);
+          if (!currentStageData[deal.stage]) {
+            currentStageData[deal.stage] = {
+              totalCurrentDuration: 0,
+              activeDeals: 0,
+              averageCurrentDuration: 0
+            };
+          }
+          currentStageData[deal.stage].totalCurrentDuration += currentDuration;
+          currentStageData[deal.stage].activeDeals += 1;
+        }
+      });
+      
+      // Calculate averages
+      Object.keys(stageAnalytics).forEach(stage => {
+        const data = stageAnalytics[stage];
+        if (data.completedTransitions > 0) {
+          data.averageDuration = data.totalDuration / data.completedTransitions;
+        }
+      });
+      
+      Object.keys(currentStageData).forEach(stage => {
+        const data = currentStageData[stage];
+        if (data.activeDeals > 0) {
+          data.averageCurrentDuration = data.totalCurrentDuration / data.activeDeals;
+        }
+      });
+      
+      return {
+        historicalStageMetrics: stageAnalytics,
+        currentStageMetrics: currentStageData
+      };
+      
+    } catch (error) {
+      console.error("Error getting stage duration analytics:", error);
+      return { historicalStageMetrics: {}, currentStageMetrics: {} };
     }
   },
 
   async getPipelineMetrics() {
     await delay(200)
-    const totalValue = deals.reduce((sum, deal) => sum + (parseFloat(deal.amount) || 0), 0)
-    const weightedValue = deals.reduce((sum, deal) => {
-      const amount = parseFloat(deal.amount) || 0
-      const probability = parseInt(deal.probability) || 0
-      return sum + (amount * (probability / 100))
-    }, 0)
     
-    const stageDistribution = deals.reduce((acc, deal) => {
-      acc[deal.stage] = (acc[deal.stage] || 0) + 1
-      return acc
-    }, {})
+    try {
+      const deals = await this.getAll();
+      const totalValue = deals.reduce((sum, deal) => sum + (parseFloat(deal.amount) || 0), 0);
+      const weightedValue = deals.reduce((sum, deal) => {
+        const amount = parseFloat(deal.amount) || 0;
+        const probability = parseInt(deal.probability) || 0;
+        return sum + (amount * (probability / 100));
+      }, 0);
+      
+      const stageDistribution = deals.reduce((acc, deal) => {
+        acc[deal.stage] = (acc[deal.stage] || 0) + 1;
+        return acc;
+      }, {});
 
-    return {
-      totalValue,
-      weightedValue,
-      totalDeals: deals.length,
-      stageDistribution
+      return {
+        totalValue,
+        weightedValue,
+        totalDeals: deals.length,
+        stageDistribution
+      };
+      
+    } catch (error) {
+      console.error("Error getting pipeline metrics:", error);
+      return { totalValue: 0, weightedValue: 0, totalDeals: 0, stageDistribution: {} };
     }
   },
 
   async getDealById(id) {
-    await delay(150)
-    const deal = deals.find(d => d.Id === parseInt(id))
-    if (!deal) {
-      throw new Error("Deal not found")
-    }
-    return { ...deal }
+    return this.getById(id);
   },
 
   async getStageTransitionHistory(id) {
     await delay(200)
-    const deal = deals.find(d => d.Id === parseInt(id))
-    if (!deal) {
-      throw new Error("Deal not found")
-    }
     
-    return deal.stageHistory || []
-},
+    try {
+      const deal = await this.getById(id);
+      return deal.stageHistory || [];
+      
+    } catch (error) {
+      console.error("Error getting stage transition history:", error);
+      return [];
+    }
+  },
 
   async bulkAssign(dealIds, assigneeId) {
     await delay(400)
-    const now = new Date().toISOString()
-    const idsToUpdate = dealIds.map(id => parseInt(id))
     
-    // Validate assignee exists (basic validation)
-    if (assigneeId !== null && (typeof assigneeId !== 'number' || assigneeId <= 0)) {
-      throw new Error("Invalid assignee selected")
-    }
-    
-    let updatedCount = 0
-    deals = deals.map(deal => {
-      if (idsToUpdate.includes(deal.Id)) {
-        const previousOwner = deal.dealOwner
-        const assignmentChanged = assigneeId !== previousOwner
-        
-        if (assignmentChanged) {
-          const currentHistory = deal.assignmentHistory || []
-          const newHistoryEntry = {
-            assignedTo: assigneeId,
-            assignedAt: now,
-            assignedBy: 1, // Current user
-            previousAssignee: previousOwner,
-            status: assigneeId ? 'active' : 'unassigned',
-            bulkAssignment: true
-          }
-          
-          updatedCount++
-          return {
-            ...deal,
-            dealOwner: assigneeId,
-            assignedAt: assigneeId ? now : null,
-            assignmentHistory: [...currentHistory, newHistoryEntry],
-            updatedAt: now
-          }
-        }
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        throw new Error("ApperClient not initialized");
       }
-      return deal
-    })
-    
-    return { updated: updatedCount, total: idsToUpdate.length }
+
+      const records = dealIds.map(id => ({
+        Id: parseInt(id),
+        dealOwner_c: assigneeId
+      }));
+
+      const params = { records };
+      const response = await apperClient.updateRecord('deal_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        throw new Error(response.message);
+      }
+
+      const successful = response.results?.filter(r => r.success) || [];
+      return { updated: successful.length, total: dealIds.length };
+      
+    } catch (error) {
+      console.error("Error bulk assigning deals:", error);
+      throw error;
+    }
   }
 }

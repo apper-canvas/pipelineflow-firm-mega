@@ -1,4 +1,5 @@
-import commentsData from '../mockData/comments.json'
+// Mock comments service since comments are not in the database schema
+// This will act as a temporary solution until comments table is added
 
 // Simulate network delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
@@ -29,11 +30,8 @@ const extractTopicFromContent = (content) => {
   return 'general'
 }
 
-// Mock data store
-let comments = [...commentsData.map(comment => ({
-  ...comment,
-  topic: comment.topic || extractTopicFromContent(comment.content)
-}))]
+// In-memory mock data store (since no comments table in database)
+let comments = []
 
 export const commentsService = {
   async getByTaskId(taskId) {
@@ -54,7 +52,7 @@ export const commentsService = {
   async create(commentData) {
     await delay(300)
     const now = new Date().toISOString()
-const newComment = {
+    const newComment = {
       ...commentData,
       Id: Math.max(...comments.map(c => c.Id), 0) + 1,
       createdAt: now,
@@ -97,7 +95,7 @@ const newComment = {
     }
 
     const updatedComment = {
-...originalComment,
+      ...originalComment,
       ...commentData,
       Id: parseInt(id),
       updatedAt: now,
@@ -118,7 +116,7 @@ const newComment = {
     }
     
     // Also delete all replies to this comment
-const commentToDelete = comments[index]
+    const commentToDelete = comments[index]
     const repliesToDelete = comments.filter(c => c.parentCommentId === commentToDelete.Id)
     
     // Recursively find all nested replies
@@ -265,7 +263,7 @@ const commentToDelete = comments[index]
   },
 
   async search(taskId, query) {
-await delay(200)
+    await delay(200)
     const taskComments = comments.filter(c => c.taskId === parseInt(taskId))
     
     if (!query.trim()) {

@@ -1,59 +1,44 @@
-import React from "react"
-import ApperIcon from "@/components/ApperIcon"
-import UserMenu from "@/components/molecules/UserMenu"
-import SearchBar from "@/components/molecules/SearchBar"
+import React from "react";
+import { useAuth } from "@/layouts/Root";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
+import SearchBar from "@/components/molecules/SearchBar";
+import UserMenu from "@/components/molecules/UserMenu";
 
-const Header = ({ onMobileMenuToggle, sidebarCollapsed }) => {
+export default function Header({ onMobileMenuToggle, sidebarCollapsed }) {
+  const { logout } = useAuth();
+
   return (
-    <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 flex items-center justify-between px-4 lg:px-6">
-      {/* Left Section */}
-      <div className="flex items-center space-x-4">
-        {/* Mobile menu button */}
-        <button
-          onClick={onMobileMenuToggle}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200 lg:hidden"
-        >
-          <ApperIcon name="Menu" className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-        </button>
-
-        {/* Search Bar */}
-        <div className="hidden md:block">
-          <SearchBar
-            placeholder="Search contacts, deals, tasks..."
-            className="w-80"
-            onSearch={(term) => console.log("Search:", term)}
-          />
-        </div>
-      </div>
-
-      {/* Right Section */}
-      <div className="flex items-center space-x-4">
-        {/* Mobile search button */}
-        <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200 md:hidden">
-          <ApperIcon name="Search" className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-        </button>
-
-        {/* Notifications */}
-        <div className="relative">
-          <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200">
-            <ApperIcon name="Bell" className="h-5 w-5 text-slate-600 dark:text-slate-400" />
-            <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-xs font-medium text-white">3</span>
-            </span>
+    <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 lg:px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={onMobileMenuToggle}
+            className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            <ApperIcon name="Menu" className="w-5 h-5" />
           </button>
+          
+          {!sidebarCollapsed && (
+            <div className="hidden md:block">
+              <SearchBar placeholder="Search..." />
+            </div>
+          )}
         </div>
-
-        {/* Quick Actions */}
-        <button className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors duration-200">
-          <ApperIcon name="Plus" className="h-4 w-4" />
-          <span className="text-sm font-medium">New Deal</span>
-        </button>
-
-        {/* User Menu */}
-        <UserMenu />
+        
+        <div className="flex items-center space-x-4">
+          <Button
+            onClick={logout}
+            variant="ghost"
+            size="sm"
+            className="text-slate-600 hover:text-slate-800"
+          >
+            <ApperIcon name="LogOut" className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+          <UserMenu />
+        </div>
       </div>
-    </header>
-  )
+    </div>
+)
 }
-
-export default Header

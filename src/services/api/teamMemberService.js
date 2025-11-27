@@ -1,5 +1,9 @@
-// Mock team member data for assignment functionality
-const teamMembers = [
+import { useSelector } from 'react-redux'
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+// Mock team member data for assignment functionality (since team members aren't in the database)
+const mockTeamMembers = [
   {
     Id: 1,
     name: "Current User",
@@ -7,16 +11,18 @@ const teamMembers = [
     avatar: null,
     role: "Sales Manager",
     department: "Sales",
-    isCurrentUser: true
+    isCurrentUser: true,
+    availability: 'available'
   },
   {
     Id: 2,
     name: "John Smith",
     email: "john.smith@company.com",
     avatar: null,
-    role: "Sales Representative",
+    role: "Sales Representative", 
     department: "Sales",
-    isCurrentUser: false
+    isCurrentUser: false,
+    availability: 'available'
   },
   {
     Id: 3,
@@ -24,8 +30,9 @@ const teamMembers = [
     email: "sarah.wilson@company.com",
     avatar: null,
     role: "Account Manager",
-    department: "Sales",
-    isCurrentUser: false
+    department: "Sales", 
+    isCurrentUser: false,
+    availability: 'available'
   },
   {
     Id: 4,
@@ -34,19 +41,18 @@ const teamMembers = [
     avatar: null,
     role: "Business Development Rep",
     department: "Sales",
-    isCurrentUser: false
+    isCurrentUser: false,
+    availability: 'available'
   }
 ]
-
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 export const teamMemberService = {
   async getAll() {
     await delay(200)
-    return [...teamMembers]
+    return [...mockTeamMembers]
   },
 
-async getById(id) {
+  async getById(id) {
     await delay(200)
     
     // Handle null/undefined/invalid IDs gracefully
@@ -59,12 +65,12 @@ async getById(id) {
       return null
     }
     
-    const member = teamMembers.find(m => m.Id === parsedId)
+    const member = mockTeamMembers.find(m => m.Id === parsedId)
     return member ? { ...member } : null
   },
 
   getCurrentUser() {
-    return teamMembers.find(m => m.isCurrentUser) || teamMembers[0]
+    return mockTeamMembers.find(m => m.isCurrentUser) || mockTeamMembers[0]
   },
 
   async getWorkload(memberId) {
@@ -82,7 +88,7 @@ async getById(id) {
 
   async updateAvailability(memberId, availability) {
     await delay(150);
-    const member = teamMembers.find(m => m.Id === parseInt(memberId));
+    const member = mockTeamMembers.find(m => m.Id === parseInt(memberId));
     if (!member) {
       throw new Error("Team member not found");
     }
@@ -94,6 +100,6 @@ async getById(id) {
 
   async getAvailableMembers() {
     await delay(100);
-    return teamMembers.filter(m => m.availability === 'available');
+    return mockTeamMembers.filter(m => m.availability === 'available');
   }
 }
