@@ -193,7 +193,7 @@ export const dealService = {
           dealOwner_c: dealData.dealOwner || null,
           assignmentHistory_c: JSON.stringify(assignmentHistory),
           stageHistory_c: JSON.stringify(stageHistory),
-          contactId_c: dealData.contactId || null,
+contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
           Tags: dealData.tags ? dealData.tags.join(',') : ''
         }]
       };
@@ -267,7 +267,7 @@ export const dealService = {
           dealOwner_c: dealData.dealOwner || null,
           assignmentHistory_c: dealData.assignmentHistory ? JSON.stringify(dealData.assignmentHistory) : '',
           stageHistory_c: dealData.stageHistory ? JSON.stringify(dealData.stageHistory) : '',
-          contactId_c: dealData.contactId || null,
+contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
           Tags: dealData.tags ? dealData.tags.join(',') : ''
         }]
       };
