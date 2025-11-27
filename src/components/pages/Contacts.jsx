@@ -1232,37 +1232,37 @@ onClose={() => {
                     System Information
                   </h4>
                   <div className="space-y-3">
-                    {detailModal.contact.owner && (
+                    {detailModal.contact.Owner && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="User" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-900">{detailModal.contact.owner.Name}</p>
+                          <p className="text-sm text-gray-900">{detailModal.contact.Owner?.Name || 'N/A'}</p>
                           <p className="text-xs text-gray-500">Owner</p>
                         </div>
                       </div>
                     )}
                     
-                    {detailModal.contact.createdBy && (
+                    {detailModal.contact.CreatedBy && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="UserPlus" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-900">{detailModal.contact.createdBy.Name}</p>
+                          <p className="text-sm text-gray-900">{detailModal.contact.CreatedBy?.Name || 'N/A'}</p>
                           <p className="text-xs text-gray-500">Created By</p>
                         </div>
                       </div>
                     )}
                     
-                    {detailModal.contact.modifiedBy && (
+                    {detailModal.contact.ModifiedBy && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Edit" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-900">{detailModal.contact.modifiedBy.Name}</p>
+                          <p className="text-sm text-gray-900">{detailModal.contact.ModifiedBy?.Name || 'N/A'}</p>
                           <p className="text-xs text-gray-500">Last Modified By</p>
                         </div>
                       </div>
@@ -1276,28 +1276,28 @@ onClose={() => {
                     Timeline
                   </h4>
                   <div className="space-y-3">
-                    {detailModal.contact.createdAt && (
+                    {detailModal.contact.CreatedOn && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Calendar" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {format(new Date(detailModal.contact.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                            {format(new Date(detailModal.contact.CreatedOn), "MMM d, yyyy 'at' h:mm a")}
                           </p>
                           <p className="text-xs text-gray-500">Created On</p>
                         </div>
                       </div>
                     )}
                     
-                    {detailModal.contact.lastContactedAt && (
+                    {detailModal.contact.ModifiedOn && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Clock" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {format(new Date(detailModal.contact.lastContactedAt), "MMM d, yyyy 'at' h:mm a")}
+                            {format(new Date(detailModal.contact.ModifiedOn), "MMM d, yyyy 'at' h:mm a")}
                           </p>
                           <p className="text-xs text-gray-500">Modified On</p>
                         </div>
