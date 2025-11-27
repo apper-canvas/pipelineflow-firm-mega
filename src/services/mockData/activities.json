@@ -1,0 +1,82 @@
+[
+  {
+    "Id": 1,
+    "type": "deal",
+    "description": "updated Enterprise CRM Implementation to proposal stage",
+    "userName": "John Doe",
+    "contactId": "1",
+    "dealId": "1",
+    "priority": "high",
+    "createdAt": "2024-01-21T10:30:00Z"
+  },
+  {
+    "Id": 2,
+    "type": "contact",
+    "description": "added new contact Sarah Johnson from TechCorp Solutions",
+    "userName": "John Doe", 
+    "contactId": "1",
+    "dealId": "",
+    "priority": "",
+    "createdAt": "2024-01-21T09:15:00Z"
+  },
+  {
+    "Id": 3,
+    "type": "task",
+    "description": "completed task: Update CRM records",
+    "userName": "John Doe",
+    "contactId": "",
+    "dealId": "",
+    "priority": "",
+    "createdAt": "2024-01-21T08:45:00Z"
+  },
+  {
+    "Id": 4,
+    "type": "deal",
+    "description": "moved Marketing Automation Platform to negotiation",
+    "userName": "Jane Smith",
+    "contactId": "3",
+    "dealId": "2", 
+    "priority": "medium",
+    "createdAt": "2024-01-20T16:20:00Z"
+  },
+  {
+    "Id": 5,
+    "type": "contact",
+    "description": "called Michael Chen about analytics platform demo",
+    "userName": "John Doe",
+    "contactId": "2",
+    "dealId": "",
+    "priority": "",
+    "createdAt": "2024-01-20T14:10:00Z"
+  },
+  {
+    "Id": 6,
+    "type": "deal",
+    "description": "closed Security Audit & Compliance deal for $25,000",
+    "userName": "Mike Johnson",
+    "contactId": "5",
+    "dealId": "5",
+    "priority": "high",
+    "createdAt": "2024-01-19T11:35:00Z"
+  },
+  {
+    "Id": 7,
+    "type": "task",
+    "description": "created new task: Follow up with Sarah Johnson",
+    "userName": "John Doe",
+    "contactId": "1",
+    "dealId": "",
+    "priority": "high",
+    "createdAt": "2024-01-18T13:20:00Z"
+  },
+  {
+    "Id": 8,
+    "type": "contact",
+    "description": "sent email to Emily Rodriguez about new features",
+    "userName": "Sarah Wilson",
+    "contactId": "3",
+    "dealId": "",
+    "priority": "",
+    "createdAt": "2024-01-18T10:45:00Z"
+  }
+]

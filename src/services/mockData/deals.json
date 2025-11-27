@@ -1,0 +1,74 @@
+[
+  {
+    "Id": 1,
+    "title": "Enterprise CRM Implementation",
+    "amount": 125000,
+    "stage": "proposal",
+    "probability": 75,
+    "closeDate": "2024-03-15",
+    "contactId": "1",
+    "notes": "Large enterprise deal. Final proposal submitted. Waiting for decision.",
+    "createdAt": "2024-01-10T09:00:00Z",
+    "updatedAt": "2024-01-20T15:30:00Z"
+  },
+  {
+    "Id": 2,
+    "title": "Marketing Automation Platform",
+    "amount": 35000,
+    "stage": "negotiation",
+    "probability": 85,
+    "closeDate": "2024-02-28",
+    "contactId": "3",
+    "notes": "In final negotiations. Price and timeline almost agreed upon.",
+    "createdAt": "2024-01-05T14:15:00Z",
+    "updatedAt": "2024-01-21T11:20:00Z"
+  },
+  {
+    "Id": 3,
+    "title": "Data Analytics Suite",
+    "amount": 75000,
+    "stage": "qualified",
+    "probability": 60,
+    "closeDate": "2024-04-10",
+    "contactId": "2",
+    "notes": "Strong interest shown. Technical requirements being finalized.",
+    "createdAt": "2024-01-12T11:30:00Z",
+    "updatedAt": "2024-01-18T16:45:00Z"
+  },
+  {
+    "Id": 4,
+    "title": "Cloud Infrastructure Setup",
+    "amount": 50000,
+    "stage": "new",
+    "probability": 25,
+    "closeDate": "2024-05-20",
+    "contactId": "4",
+    "notes": "Initial discussion completed. Preparing detailed proposal.",
+    "createdAt": "2024-01-15T13:45:00Z",
+    "updatedAt": "2024-01-15T13:45:00Z"
+  },
+  {
+    "Id": 5,
+    "title": "Security Audit & Compliance",
+    "amount": 25000,
+    "stage": "closed-won",
+    "probability": 100,
+    "closeDate": "2024-01-25",
+    "contactId": "5",
+    "notes": "Deal closed successfully. Project kickoff scheduled for next week.",
+    "createdAt": "2024-01-08T10:20:00Z",
+    "updatedAt": "2024-01-22T14:30:00Z"
+  },
+  {
+    "Id": 6,
+    "title": "Website Redesign Project",
+    "amount": 15000,
+    "stage": "closed-lost",
+    "probability": 0,
+    "closeDate": "2024-01-30",
+    "contactId": "6",
+    "notes": "Client decided to go with another vendor due to budget constraints.",
+    "createdAt": "2024-01-03T15:10:00Z",
+    "updatedAt": "2024-01-19T09:15:00Z"
+  }
+]

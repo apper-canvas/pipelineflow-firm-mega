@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "title": "Total Revenue",
+    "value": "$125,840",
+    "change": "+12.5%",
+    "changeType": "positive",
+    "icon": "DollarSign"
+  },
+  {
+    "id": 2,
+    "title": "Active Deals",
+    "value": "43",
+    "change": "+8%",
+    "changeType": "positive",
+    "icon": "Target"
+  },
+  {
+    "id": 3,
+    "title": "New Contacts",
+    "value": "187",
+    "change": "+23%",
+    "changeType": "positive",
+    "icon": "Users"
+  },
+  {
+    "id": 4,
+    "title": "Conversion Rate",
+    "value": "24.8%",
+    "change": "-2.4%",
+    "changeType": "negative",
+    "icon": "TrendingUp"
+  }
+]

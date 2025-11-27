@@ -1,0 +1,155 @@
+{
+  "stats": [
+    {
+      "id": 1,
+      "title": "Monthly Revenue",
+      "value": "$85,420",
+      "change": "+15.2%",
+      "changeType": "positive",
+      "icon": "DollarSign"
+    },
+    {
+      "id": 2,
+      "title": "Deals Closed",
+      "value": "28",
+      "change": "+22%",
+      "changeType": "positive", 
+      "icon": "Target"
+    },
+    {
+      "id": 3,
+      "title": "New Leads",
+      "value": "156",
+      "change": "+8.5%",
+      "changeType": "positive",
+      "icon": "UserPlus"
+    },
+    {
+      "id": 4,
+      "title": "Team Activities",
+      "value": "324",
+      "change": "-5.2%",
+      "changeType": "negative",
+      "icon": "Activity"
+    }
+  ],
+  "chartData": {
+    "categories": ["Week 1", "Week 2", "Week 3", "Week 4"],
+    "series": [
+      {
+        "name": "Revenue",
+        "data": [18500, 22300, 19800, 24820]
+      },
+      {
+        "name": "Target",
+        "data": [20000, 20000, 20000, 20000]
+      }
+    ]
+  },
+  "pipelineData": {
+    "labels": ["New", "Qualified", "Proposal", "Negotiation", "Closed Won", "Closed Lost"],
+    "series": [45000, 75000, 125000, 85000, 150000, 25000]
+  },
+  "topPerformers": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "deals": 12,
+      "revenue": 285000,
+      "conversion": 85
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith", 
+      "deals": 8,
+      "revenue": 195000,
+      "conversion": 78
+    },
+    {
+      "id": 3,
+      "name": "Mike Johnson",
+      "deals": 6,
+      "revenue": 145000,
+      "conversion": 72
+    },
+    {
+      "id": 4,
+      "name": "Sarah Wilson",
+      "deals": 5,
+      "revenue": 125000,
+      "conversion": 68
+    }
+  ],
+  "activitySummary": [
+    {
+      "type": "calls",
+      "count": 145,
+      "change": "+12%",
+      "trend": "up"
+    },
+    {
+      "type": "emails", 
+      "count": 289,
+      "change": "+8%",
+      "trend": "up"
+    },
+    {
+      "type": "meetings",
+      "count": 42,
+      "change": "-5%",
+      "trend": "down"
+    },
+    {
+      "type": "tasks",
+      "count": 167,
+      "change": "+15%",
+      "trend": "up"
+    }
+  ],
+  "conversionRates": [
+    {
+      "stage": "Lead to Qualified",
+      "percentage": 75,
+      "converted": 117,
+      "total": 156
+    },
+    {
+      "stage": "Qualified to Proposal",
+      "percentage": 65,
+      "converted": 76,
+      "total": 117
+    },
+    {
+      "stage": "Proposal to Closed",
+      "percentage": 45,
+      "converted": 34,
+      "total": 76
+    },
+    {
+      "stage": "Overall Conversion",
+      "percentage": 22,
+      "converted": 34,
+      "total": 156
+    }
+  ],
+  "goals": [
+    {
+      "metric": "Monthly Revenue",
+      "current": 85420,
+      "target": 100000,
+      "progress": 85.4
+    },
+    {
+      "metric": "Deals Closed",
+      "current": 28,
+      "target": 35,
+      "progress": 80
+    },
+    {
+      "metric": "New Contacts",
+      "current": 187,
+      "target": 200,
+      "progress": 93.5
+    }
+  ]
+}

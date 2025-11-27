@@ -1,0 +1,74 @@
+[
+  {
+    "Id": 1,
+    "name": "Sarah Johnson",
+    "email": "sarah.johnson@techcorp.com",
+    "phone": "+1 (555) 123-4567",
+    "company": "TechCorp Solutions",
+    "position": "VP of Sales",
+    "avatar": "",
+    "tags": ["enterprise", "decision-maker"],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "lastContactedAt": "2024-01-20T14:30:00Z"
+  },
+  {
+    "Id": 2,
+    "name": "Michael Chen",
+    "email": "m.chen@innovate.co",
+    "phone": "+1 (555) 987-6543",
+    "company": "Innovate Inc",
+    "position": "CTO",
+    "avatar": "",
+    "tags": ["tech", "startup"],
+    "createdAt": "2024-01-10T09:15:00Z",
+    "lastContactedAt": "2024-01-18T11:45:00Z"
+  },
+  {
+    "Id": 3,
+    "name": "Emily Rodriguez",
+    "email": "emily.r@globalventures.com",
+    "phone": "+1 (555) 456-7890",
+    "company": "Global Ventures",
+    "position": "Marketing Director",
+    "avatar": "",
+    "tags": ["marketing", "enterprise"],
+    "createdAt": "2024-01-12T16:20:00Z",
+    "lastContactedAt": "2024-01-19T13:15:00Z"
+  },
+  {
+    "Id": 4,
+    "name": "David Thompson",
+    "email": "david.t@startupxyz.com",
+    "phone": "+1 (555) 321-0987",
+    "company": "StartupXYZ",
+    "position": "Founder & CEO",
+    "avatar": "",
+    "tags": ["startup", "founder"],
+    "createdAt": "2024-01-08T12:30:00Z",
+    "lastContactedAt": "2024-01-17T10:20:00Z"
+  },
+  {
+    "Id": 5,
+    "name": "Lisa Anderson",
+    "email": "lisa.anderson@enterprise.org",
+    "phone": "+1 (555) 654-3210",
+    "company": "Enterprise Solutions",
+    "position": "Operations Manager",
+    "avatar": "",
+    "tags": ["operations", "enterprise"],
+    "createdAt": "2024-01-14T08:45:00Z",
+    "lastContactedAt": "2024-01-21T15:10:00Z"
+  },
+  {
+    "Id": 6,
+    "name": "Robert Kim",
+    "email": "robert.kim@futuretech.io",
+    "phone": "+1 (555) 789-0123",
+    "company": "FutureTech",
+    "position": "Product Manager",
+    "avatar": "",
+    "tags": ["product", "tech"],
+    "createdAt": "2024-01-11T14:15:00Z",
+    "lastContactedAt": "2024-01-16T09:30:00Z"
+  }
+]

@@ -1,0 +1,145 @@
+[
+  {
+    "Id": 1,
+    "title": "Enterprise Software License",
+    "company": "MegaCorp Industries",
+    "contactName": "James Wilson",
+    "email": "james.wilson@megacorp.com",
+    "phone": "+1 (555) 111-2222",
+    "value": "75000",
+    "budget": "100000",
+    "timeline": "Q2 2024",
+    "source": "website",
+    "stage": "qualified",
+    "notes": "Looking for comprehensive enterprise solution. Decision by Q2.",
+    "score": 78,
+    "scoreHistory": [
+      {
+        "score": 65,
+        "previousScore": null,
+        "timestamp": "2024-01-15T09:00:00Z",
+        "reason": "Lead created"
+      },
+      {
+        "score": 78,
+        "previousScore": 65,
+        "timestamp": "2024-01-20T14:30:00Z",
+        "reason": "Stage updated to qualified"
+      }
+    ],
+    "createdAt": "2024-01-15T09:00:00Z",
+    "updatedAt": "2024-01-20T14:30:00Z"
+  },
+  {
+    "Id": 2,
+    "title": "Marketing Automation Platform",
+    "company": "GrowthCo",
+    "contactName": "Maria Santos",
+    "email": "maria@growthco.com",
+    "phone": "+1 (555) 333-4444",
+    "value": "25000",
+    "budget": "30000",
+    "timeline": "Q3 2024",
+    "source": "referral",
+    "stage": "new",
+    "notes": "Interested in marketing automation tools. Small team, budget conscious.",
+    "score": 45,
+    "scoreHistory": [
+      {
+        "score": 45,
+        "previousScore": null,
+        "timestamp": "2024-01-18T11:15:00Z",
+        "reason": "Lead created"
+      }
+    ],
+    "createdAt": "2024-01-18T11:15:00Z",
+    "updatedAt": "2024-01-18T11:15:00Z"
+  },
+  {
+    "Id": 3,
+    "title": "CRM Integration Services",
+    "company": "TechStart LLC",
+    "contactName": "Alex Morgan",
+    "email": "alex.morgan@techstart.com",
+    "phone": "+1 (555) 555-6666",
+    "value": "15000",
+    "budget": "20000",
+    "timeline": "Flexible",
+    "source": "cold-call",
+    "stage": "contacted",
+    "notes": "Need CRM integration with existing systems. Timeline flexible.",
+    "score": 52,
+    "scoreHistory": [
+      {
+        "score": 35,
+        "previousScore": null,
+        "timestamp": "2024-01-14T16:20:00Z",
+        "reason": "Lead created"
+      },
+      {
+        "score": 52,
+        "previousScore": 35,
+        "timestamp": "2024-01-19T10:45:00Z",
+        "reason": "Stage updated to contacted"
+      }
+    ],
+    "createdAt": "2024-01-14T16:20:00Z",
+    "updatedAt": "2024-01-19T10:45:00Z"
+  },
+  {
+    "Id": 4,
+    "title": "Data Analytics Solution",
+    "company": "DataDriven Corp",
+    "contactName": "Jennifer Lee",
+    "email": "j.lee@datadriven.com",
+    "phone": "+1 (555) 777-8888",
+    "value": "50000",
+    "budget": "75000",
+    "timeline": "Q1 2024",
+    "source": "trade-show",
+    "stage": "qualified",
+    "notes": "Met at tech conference. Very interested in our analytics platform.",
+    "score": 85,
+    "scoreHistory": [
+      {
+        "score": 70,
+        "previousScore": null,
+        "timestamp": "2024-01-12T13:30:00Z",
+        "reason": "Lead created"
+      },
+      {
+        "score": 85,
+        "previousScore": 70,
+        "timestamp": "2024-01-21T09:15:00Z",
+        "reason": "Stage updated to qualified"
+      }
+    ],
+    "createdAt": "2024-01-12T13:30:00Z",
+    "updatedAt": "2024-01-21T09:15:00Z"
+  },
+  {
+    "Id": 5,
+    "title": "Cloud Migration Project",
+    "company": "LegacySystems Inc",
+    "contactName": "Tom Rodriguez",
+    "email": "tom.r@legacysystems.com",
+    "phone": "+1 (555) 999-0000",
+    "value": "100000",
+    "budget": "150000",
+    "timeline": "TBD",
+    "source": "email",
+    "stage": "unqualified",
+    "notes": "Large project but unclear budget and timeline. Need more discovery.",
+    "score": 38,
+    "scoreHistory": [
+      {
+        "score": 38,
+        "previousScore": null,
+        "timestamp": "2024-01-16T10:45:00Z",
+        "reason": "Lead created"
+      }
+    ],
+    "createdAt": "2024-01-16T10:45:00Z",
+    "updatedAt": "2024-01-16T10:45:00Z"
+  }
+]
