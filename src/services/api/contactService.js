@@ -14,7 +14,7 @@ export const contactService = {
       }
 
       const response = await apperClient.fetchRecords('contact_c', {
-        fields: [
+fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "email_c"}},
           {"field": {"Name": "phone_c"}},
@@ -25,7 +25,10 @@ export const contactService = {
           {"field": {"Name": "assignmentHistory_c"}},
           {"field": {"Name": "Tags"}},
           {"field": {"Name": "CreatedOn"}},
-          {"field": {"Name": "ModifiedOn"}}
+          {"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "Owner"}},
+          {"field": {"Name": "CreatedBy"}},
+          {"field": {"Name": "ModifiedBy"}}
         ]
       });
 
@@ -36,7 +39,7 @@ export const contactService = {
       }
 
       // Map database fields to frontend format
-      return (response.data || []).map(contact => ({
+return (response.data || []).map(contact => ({
         Id: contact.Id,
         name: contact.Name,
         email: contact.email_c,
@@ -48,7 +51,10 @@ export const contactService = {
         assignmentHistory: contact.assignmentHistory_c ? JSON.parse(contact.assignmentHistory_c) : [],
         tags: contact.Tags ? contact.Tags.split(',') : [],
         createdAt: contact.CreatedOn,
-        lastContactedAt: contact.ModifiedOn
+        lastContactedAt: contact.ModifiedOn,
+        owner: contact.Owner,
+        createdBy: contact.CreatedBy,
+        modifiedBy: contact.ModifiedBy
       }));
       
     } catch (error) {
@@ -68,13 +74,16 @@ export const contactService = {
 
       const response = await apperClient.fetchRecords('contact_c', {
         fields: [
-          {"field": {"Name": "Name"}},
+{"field": {"Name": "Name"}},
           {"field": {"Name": "email_c"}},
           {"field": {"Name": "phone_c"}},
           {"field": {"Name": "company_c"}},
           {"field": {"Name": "position_c"}},
           {"field": {"Name": "assignedTo_c"}},
-          {"field": {"Name": "CreatedOn"}}
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "Owner"}},
+          {"field": {"Name": "CreatedBy"}}
         ],
         where: [{
           "FieldName": "assignedTo_c",
@@ -86,14 +95,17 @@ export const contactService = {
       if (!response.success) return [];
 
       return (response.data || []).map(contact => ({
-        Id: contact.Id,
+Id: contact.Id,
         name: contact.Name,
         email: contact.email_c,
         phone: contact.phone_c,
         company: contact.company_c,
         position: contact.position_c,
         assignedTo: contact.assignedTo_c,
-        createdAt: contact.CreatedOn
+        tags: contact.Tags ? contact.Tags.split(',') : [],
+        createdAt: contact.CreatedOn,
+        owner: contact.Owner,
+        createdBy: contact.CreatedBy
       }));
       
     } catch (error) {
@@ -112,7 +124,7 @@ export const contactService = {
       }
 
       const response = await apperClient.getRecordById('contact_c', parseInt(id), {
-        fields: [
+fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "email_c"}},
           {"field": {"Name": "phone_c"}},
@@ -123,7 +135,10 @@ export const contactService = {
           {"field": {"Name": "assignmentHistory_c"}},
           {"field": {"Name": "Tags"}},
           {"field": {"Name": "CreatedOn"}},
-          {"field": {"Name": "ModifiedOn"}}
+          {"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "Owner"}},
+          {"field": {"Name": "CreatedBy"}},
+          {"field": {"Name": "ModifiedBy"}}
         ]
       });
 
@@ -132,7 +147,7 @@ export const contactService = {
       }
 
       const contact = response.data;
-      return {
+return {
         Id: contact.Id,
         name: contact.Name,
         email: contact.email_c,
@@ -144,7 +159,10 @@ export const contactService = {
         assignmentHistory: contact.assignmentHistory_c ? JSON.parse(contact.assignmentHistory_c) : [],
         tags: contact.Tags ? contact.Tags.split(',') : [],
         createdAt: contact.CreatedOn,
-        lastContactedAt: contact.ModifiedOn
+        lastContactedAt: contact.ModifiedOn,
+        owner: contact.Owner,
+        createdBy: contact.CreatedBy,
+        modifiedBy: contact.ModifiedBy
       };
       
     } catch (error) {
@@ -416,7 +434,7 @@ export const contactService = {
     
     try {
       const contacts = await this.getAll();
-      const headers = ['Id', 'Name', 'Email', 'Phone', 'Company', 'Position', 'Created At']
+const headers = ['Id', 'Name', 'Email', 'Phone', 'Company', 'Position', 'Tags', 'Owner', 'Created At', 'Created By']
       const csvData = [
         headers.join(','),
         ...contacts.map(contact => [
@@ -426,7 +444,10 @@ export const contactService = {
           `"${(contact.phone || '').replace(/"/g, '""')}"`,
           `"${(contact.company || '').replace(/"/g, '""')}"`,
           `"${(contact.position || '').replace(/"/g, '""')}"`,
-          contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : ''
+          `"${(contact.tags || []).join(', ').replace(/"/g, '""')}"`,
+          `"${(contact.owner?.Name || '').replace(/"/g, '""')}"`,
+          contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : '',
+          `"${(contact.createdBy?.Name || '').replace(/"/g, '""')}"`
         ].join(','))
       ].join('\n')
       
