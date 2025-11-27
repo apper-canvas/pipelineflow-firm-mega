@@ -755,11 +755,11 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                                 showName={false}
                               />
                             )}
-                          </div>
-                          </div>
+</div>
                         </div>
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {contact.company || '-'}
                     </td>
