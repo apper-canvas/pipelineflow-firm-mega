@@ -22,9 +22,10 @@ const [formData, setFormData] = useState({
     closeDate: "",
     contactId: "",
     notes: "",
-dealOwner: null,
+    dealOwner: null,
     assignmentHistory: [],
-    stageChangedAt: new Date().toISOString()
+    stageChangedAt: new Date().toISOString(),
+    tags: []
   })
   const [contacts, setContacts] = useState([])
   const [saving, setSaving] = useState(false)
@@ -37,14 +38,15 @@ dealOwner: null,
 
   useEffect(() => {
 if (deal) {
-      setFormData({
+setFormData({
         ...deal,
         dealOwner: deal.dealOwner || null,
         assignmentHistory: deal.assignmentHistory || [],
-        closeDate: deal.closeDate ? format(new Date(deal.closeDate), "yyyy-MM-dd") : ""
+        closeDate: deal.closeDate ? format(new Date(deal.closeDate), "yyyy-MM-dd") : "",
+        tags: deal.tags || []
       })
     } else {
-      setFormData({
+setFormData({
         title: "",
         amount: "",
         stage: "new",
@@ -54,7 +56,8 @@ if (deal) {
         notes: "",
         dealOwner: null,
         assignmentHistory: [],
-        stageChangedAt: new Date().toISOString()
+        stageChangedAt: new Date().toISOString(),
+        tags: []
       })
     }
   }, [deal])
@@ -106,13 +109,28 @@ if (deal) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          <Input
+<Input
             label="Deal Title"
             value={formData.title}
             onChange={(e) => setFormData({...formData, title: e.target.value})}
             placeholder="Enterprise Software License"
             required
           />
+
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Tags
+            </label>
+            <Input
+              value={formData.tags?.join(', ') || ''}
+              onChange={(e) => setFormData({
+                ...formData, 
+                tags: e.target.value ? e.target.value.split(',').map(tag => tag.trim()) : []
+              })}
+              placeholder="Enter tags separated by commas"
+            />
+            <p className="text-xs text-slate-500">Separate multiple tags with commas</p>
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
             <Input
@@ -184,12 +202,11 @@ if (deal) {
               ))}
             </select>
 </div>
-
-          <div className="space-y-1">
+<div className="space-y-1">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Deal Owner
             </label>
-<AssigneeSelector
+            <AssigneeSelector
               value={formData.dealOwner}
               onChange={(value) => setFormData({...formData, dealOwner: value})}
               placeholder="Assign deal owner..."
@@ -362,7 +379,7 @@ const handleStageChange = async (dealId, newStage) => {
     return 'text-red-600'
   }
 
-  const getCurrentStageDuration = (deal) => {
+const getCurrentStageDuration = (deal) => {
     if (!deal.stageChangedAt) return 0
     return new Date() - new Date(deal.stageChangedAt)
   }
@@ -370,6 +387,16 @@ const handleStageChange = async (dealId, newStage) => {
   const getTotalDealAge = (deal) => {
     if (!deal.createdAt) return 0
     return new Date() - new Date(deal.createdAt)
+  }
+
+  const getUserDisplayName = (userField) => {
+    if (typeof userField === 'object' && userField?.Name) {
+      return userField.Name;
+    }
+    if (typeof userField === 'string') {
+      return userField;
+    }
+    return 'Unknown User';
   }
 
   const handleDelete = async (dealId) => {
@@ -519,7 +546,6 @@ const totalPipelineValue = deals.reduce((sum, deal) => sum + ((parseFloat(deal.a
 {filteredDeals.map((deal) => {
             const currentStageDuration = getCurrentStageDuration(deal)
             const totalDealAge = getTotalDealAge(deal)
-            
             return (
               <div key={deal.Id} className="card hover:shadow-lg transition-all duration-200 group relative">
                 {/* Selection Checkbox */}
@@ -586,6 +612,17 @@ const totalPipelineValue = deals.reduce((sum, deal) => sum + ((parseFloat(deal.a
                   </div>
                 )}
               </div>
+
+              {deal.tags && deal.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {deal.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
               <div className="flex items-center space-x-2 mb-3">
                 <ApperIcon name="TrendingUp" className="h-4 w-4 text-slate-400" />
                 <span className={`text-sm font-medium ${getProbabilityColor(deal.probability)}`}>
@@ -600,9 +637,27 @@ const totalPipelineValue = deals.reduce((sum, deal) => sum + ((parseFloat(deal.a
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
-                <div className="text-xs text-slate-400">
-                  Created {format(new Date(deal.createdAt), "MMM d, yyyy")}
+<div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-700">
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-400">
+                    Created {format(new Date(deal.createdAt), "MMM d, yyyy")}
+                    {deal.createdBy && (
+                      <span className="ml-1">by {getUserDisplayName(deal.createdBy)}</span>
+                    )}
+                  </div>
+                  {deal.updatedAt && deal.updatedAt !== deal.createdAt && (
+                    <div className="text-xs text-slate-400">
+                      Updated {format(new Date(deal.updatedAt), "MMM d, yyyy")}
+                      {deal.modifiedBy && (
+                        <span className="ml-1">by {getUserDisplayName(deal.modifiedBy)}</span>
+                      )}
+                    </div>
+                  )}
+                  {deal.owner && (
+                    <div className="text-xs text-slate-400">
+                      Owner: {getUserDisplayName(deal.owner)}
+                    </div>
+                  )}
                 </div>
 
                 <select
@@ -641,7 +696,7 @@ const totalPipelineValue = deals.reduce((sum, deal) => sum + ((parseFloat(deal.a
 
               {/* Deal Owner Assignment Display */}
               {deal.dealOwner && (
-                <div className="mt-3 flex items-center space-x-2">
+<div className="mt-3 flex items-center space-x-2">
                   <AssigneeDisplay assignee={deal.dealOwner} />
                 </div>
               )}

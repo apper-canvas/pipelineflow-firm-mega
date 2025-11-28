@@ -14,7 +14,7 @@ export const dealService = {
       }
 
       const response = await apperClient.fetchRecords('deal_c', {
-        fields: [
+fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "title_c"}},
           {"field": {"Name": "amount_c"}},
@@ -27,8 +27,11 @@ export const dealService = {
           {"field": {"Name": "stageHistory_c"}},
           {"field": {"Name": "contactId_c"}},
           {"field": {"Name": "Tags"}},
+          {"field": {"Name": "Owner"}},
           {"field": {"Name": "CreatedOn"}},
-          {"field": {"Name": "ModifiedOn"}}
+          {"field": {"Name": "CreatedBy"}},
+          {"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "ModifiedBy"}}
         ]
       });
 
@@ -41,6 +44,7 @@ export const dealService = {
       // Map database fields to frontend format
       return (response.data || []).map(deal => ({
         Id: deal.Id,
+name: deal.Name,
         title: deal.title_c || deal.Name,
         amount: parseFloat(deal.amount_c) || 0,
         stage: deal.stage_c || 'new',
@@ -53,8 +57,11 @@ export const dealService = {
         contactId: deal.contactId_c?.Id || deal.contactId_c,
         contactName: deal.contactId_c?.Name,
         tags: deal.Tags ? deal.Tags.split(',') : [],
+        owner: deal.Owner,
         createdAt: deal.CreatedOn,
-        updatedAt: deal.ModifiedOn
+        createdBy: deal.CreatedBy,
+        updatedAt: deal.ModifiedOn,
+        modifiedBy: deal.ModifiedBy
       }));
       
     } catch (error) {
@@ -73,13 +80,18 @@ export const dealService = {
       if (!apperClient) return [];
 
       const response = await apperClient.fetchRecords('deal_c', {
-        fields: [
+fields: [
           {"field": {"Name": "Name"}},
           {"field": {"Name": "title_c"}},
           {"field": {"Name": "amount_c"}},
           {"field": {"Name": "stage_c"}},
           {"field": {"Name": "dealOwner_c"}},
-          {"field": {"Name": "CreatedOn"}}
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "Owner"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "CreatedBy"}},
+          {"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "ModifiedBy"}}
         ],
         where: [{
           "FieldName": "dealOwner_c",
@@ -92,11 +104,17 @@ export const dealService = {
 
       return (response.data || []).map(deal => ({
         Id: deal.Id,
+name: deal.Name,
         title: deal.title_c || deal.Name,
         amount: parseFloat(deal.amount_c) || 0,
         stage: deal.stage_c || 'new',
         dealOwner: deal.dealOwner_c,
-        createdAt: deal.CreatedOn
+        tags: deal.Tags ? deal.Tags.split(',') : [],
+        owner: deal.Owner,
+        createdAt: deal.CreatedOn,
+        createdBy: deal.CreatedBy,
+        updatedAt: deal.ModifiedOn,
+        modifiedBy: deal.ModifiedBy
       }));
       
     } catch (error) {
@@ -116,7 +134,7 @@ export const dealService = {
 
       const response = await apperClient.getRecordById('deal_c', parseInt(id), {
         fields: [
-          {"field": {"Name": "Name"}},
+{"field": {"Name": "Name"}},
           {"field": {"Name": "title_c"}},
           {"field": {"Name": "amount_c"}},
           {"field": {"Name": "stage_c"}},
@@ -127,7 +145,12 @@ export const dealService = {
           {"field": {"Name": "assignmentHistory_c"}},
           {"field": {"Name": "stageHistory_c"}},
           {"field": {"Name": "contactId_c"}},
-          {"field": {"Name": "Tags"}}
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "Owner"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "CreatedBy"}},
+          {"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "ModifiedBy"}}
         ]
       });
 
@@ -137,7 +160,8 @@ export const dealService = {
 
       const deal = response.data;
       return {
-        Id: deal.Id,
+Id: deal.Id,
+        name: deal.Name,
         title: deal.title_c || deal.Name,
         amount: parseFloat(deal.amount_c) || 0,
         stage: deal.stage_c || 'new',
@@ -149,7 +173,12 @@ export const dealService = {
         stageHistory: deal.stageHistory_c ? JSON.parse(deal.stageHistory_c) : [],
         contactId: deal.contactId_c?.Id || deal.contactId_c,
         contactName: deal.contactId_c?.Name,
-        tags: deal.Tags ? deal.Tags.split(',') : []
+        tags: deal.Tags ? deal.Tags.split(',') : [],
+        owner: deal.Owner,
+        createdAt: deal.CreatedOn,
+        createdBy: deal.CreatedBy,
+        updatedAt: deal.ModifiedOn,
+        modifiedBy: deal.ModifiedBy
       };
       
     } catch (error) {
@@ -183,7 +212,7 @@ export const dealService = {
 
       const params = {
         records: [{
-          Name: dealData.title || 'New Deal',
+Name: dealData.title || dealData.name || 'New Deal',
           title_c: dealData.title || '',
           amount_c: parseFloat(dealData.amount) || 0,
           stage_c: dealData.stage || 'new',
@@ -193,7 +222,7 @@ export const dealService = {
           dealOwner_c: dealData.dealOwner || null,
           assignmentHistory_c: JSON.stringify(assignmentHistory),
           stageHistory_c: JSON.stringify(stageHistory),
-contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
+          contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
           Tags: dealData.tags ? dealData.tags.join(',') : ''
         }]
       };
@@ -221,6 +250,7 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
           const createdDeal = successful[0].data;
           return {
             Id: createdDeal.Id,
+name: createdDeal.Name,
             title: createdDeal.title_c,
             amount: parseFloat(createdDeal.amount_c) || 0,
             stage: createdDeal.stage_c,
@@ -232,7 +262,11 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
             stageHistory,
             contactId: createdDeal.contactId_c,
             tags: dealData.tags || [],
-            createdAt: now
+            owner: createdDeal.Owner,
+            createdAt: now,
+            createdBy: createdDeal.CreatedBy,
+            updatedAt: createdDeal.ModifiedOn,
+            modifiedBy: createdDeal.ModifiedBy
           };
         }
       }
@@ -257,7 +291,7 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
       const params = {
         records: [{
           Id: parseInt(id),
-          Name: dealData.title || 'Deal',
+Name: dealData.title || dealData.name || 'Deal',
           title_c: dealData.title || '',
           amount_c: parseFloat(dealData.amount) || 0,
           stage_c: dealData.stage || 'new',
@@ -267,7 +301,7 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
           dealOwner_c: dealData.dealOwner || null,
           assignmentHistory_c: dealData.assignmentHistory ? JSON.stringify(dealData.assignmentHistory) : '',
           stageHistory_c: dealData.stageHistory ? JSON.stringify(dealData.stageHistory) : '',
-contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
+          contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
           Tags: dealData.tags ? dealData.tags.join(',') : ''
         }]
       };
@@ -294,7 +328,8 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
         if (successful.length > 0) {
           const updatedDeal = successful[0].data;
           return {
-            Id: updatedDeal.Id,
+Id: updatedDeal.Id,
+            name: updatedDeal.Name,
             title: updatedDeal.title_c,
             amount: parseFloat(updatedDeal.amount_c) || 0,
             stage: updatedDeal.stage_c,
@@ -305,7 +340,12 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
             assignmentHistory: dealData.assignmentHistory || [],
             stageHistory: dealData.stageHistory || [],
             contactId: updatedDeal.contactId_c,
-            tags: dealData.tags || []
+            tags: dealData.tags || [],
+            owner: updatedDeal.Owner,
+            createdAt: updatedDeal.CreatedOn,
+            createdBy: updatedDeal.CreatedBy,
+            updatedAt: updatedDeal.ModifiedOn,
+            modifiedBy: updatedDeal.ModifiedBy
           };
         }
       }
@@ -411,10 +451,16 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
 
       const response = await apperClient.fetchRecords('deal_c', {
         fields: [
-          {"field": {"Name": "Name"}},
+{"field": {"Name": "Name"}},
           {"field": {"Name": "title_c"}},
           {"field": {"Name": "amount_c"}},
-          {"field": {"Name": "stage_c"}}
+          {"field": {"Name": "stage_c"}},
+          {"field": {"Name": "Tags"}},
+          {"field": {"Name": "Owner"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "CreatedBy"}},
+          {"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "ModifiedBy"}}
         ],
         where: [{
           "FieldName": "stage_c",
@@ -426,10 +472,17 @@ contactId_c: dealData.contactId ? parseInt(dealData.contactId) : null,
       if (!response.success) return [];
 
       return (response.data || []).map(deal => ({
-        Id: deal.Id,
+Id: deal.Id,
+        name: deal.Name,
         title: deal.title_c || deal.Name,
         amount: parseFloat(deal.amount_c) || 0,
-        stage: deal.stage_c
+        stage: deal.stage_c,
+        tags: deal.Tags ? deal.Tags.split(',') : [],
+        owner: deal.Owner,
+        createdAt: deal.CreatedOn,
+        createdBy: deal.CreatedBy,
+        updatedAt: deal.ModifiedOn,
+        modifiedBy: deal.ModifiedBy
       }));
       
     } catch (error) {
