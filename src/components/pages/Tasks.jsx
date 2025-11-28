@@ -15,13 +15,15 @@ import AssigneeSelector from "@/components/molecules/AssigneeSelector";
 import CommentsPanel from "@/components/molecules/CommentsPanel";
 const TaskModal = ({ isOpen, task, onClose, onSave }) => {
 const [formData, setFormData] = useState({
+    name: "",
+    tags: "",
     title: "",
     description: "",
     dueDate: "",
     priority: "medium",
     status: "not-started",
     category: "follow-up",
-assignedTo: null,
+    assignedTo: null,
     assignmentHistory: [],
     relatedTo: "",
     relatedType: "contact",
@@ -39,14 +41,18 @@ assignedTo: null,
 
   useEffect(() => {
 if (task) {
-      setFormData({
+setFormData({
         ...task,
+        name: task.name || "",
+        tags: task.tags || "",
         assignedTo: task.assignedTo || null,
         assignmentHistory: task.assignmentHistory || [],
         dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : ""
       })
     } else {
-      setFormData({
+setFormData({
+        name: "",
+        tags: "",
         title: "",
         description: "",
         dueDate: "",
@@ -111,7 +117,22 @@ if (task) {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[calc(90vh-80px)] overflow-y-auto">
+<form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[calc(90vh-80px)] overflow-y-auto">
+            <Input
+              label="Task Name"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              placeholder="Task name"
+              required
+            />
+
+            <Input
+              label="Tags"
+              value={formData.tags}
+              onChange={(e) => setFormData({...formData, tags: e.target.value})}
+              placeholder="Enter tags separated by commas"
+            />
+            
             <Input
               label="Task Title"
               value={formData.title}
@@ -674,14 +695,27 @@ const tasksByStatus = {
                 {/* Task Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+<div className="flex-1">
                       <h3 className={`font-semibold ${
                         task.status === "completed" 
                           ? "text-slate-500 line-through" 
                           : "text-slate-900 dark:text-slate-100"
                       }`}>
-                        {task.title}
+                        {task.name || task.title}
                       </h3>
+
+                      {task.tags && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {task.tags.split(',').map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                            >
+                              {tag.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {task.description && (
                         <p className={`text-sm mt-1 ${
                           task.status === "completed"
@@ -739,7 +773,7 @@ const tasksByStatus = {
                       </div>
                     )}
 
-<div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         {task.relatedTo && (
                           <div className="flex items-center space-x-1 text-sm text-slate-500">
@@ -748,31 +782,69 @@ const tasksByStatus = {
                           </div>
                         )}
                       </div>
-{task.assignedTo && (
+                      {task.assignedTo && (
                         <AssigneeDisplay 
                           assigneeId={task.assignedTo} 
                           size="sm"
                           showName={false}
                         />
                       )}
-</div>
+                    </div>
+                    
+                    {/* System Information */}
+                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-600">
+                      <div className="grid grid-cols-2 gap-4 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="space-y-1">
+                          {task.owner && (
+                            <div className="flex items-center space-x-1">
+                              <ApperIcon name="Crown" className="h-3 w-3" />
+                              <span>Owner: {task.owner}</span>
+                            </div>
+                          )}
+                          {task.createdBy && (
+                            <div className="flex items-center space-x-1">
+                              <ApperIcon name="UserPlus" className="h-3 w-3" />
+                              <span>Created by: {task.createdBy}</span>
+                            </div>
+                          )}
+                          {task.createdOn && (
+                            <div className="flex items-center space-x-1">
+                              <ApperIcon name="Calendar" className="h-3 w-3" />
+                              <span>Created: {format(new Date(task.createdOn || task.createdAt), "MMM d, yyyy")}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          {task.modifiedBy && (
+                            <div className="flex items-center space-x-1">
+                              <ApperIcon name="Edit" className="h-3 w-3" />
+                              <span>Modified by: {task.modifiedBy}</span>
+                            </div>
+                          )}
+                          {task.modifiedOn && (
+                            <div className="flex items-center space-x-1">
+                              <ApperIcon name="Clock" className="h-3 w-3" />
+                              <span>Modified: {format(new Date(task.modifiedOn || task.updatedAt), "MMM d, yyyy")}</span>
+                            </div>
+                          )}
+                          {task.completedAt && (
+                            <div className="flex items-center space-x-1 text-green-600">
+                              <ApperIcon name="CheckCircle" className="h-3 w-3" />
+                              <span>Completed: {format(new Date(task.completedAt), "MMM d, yyyy")}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                     
                     {/* Task Selection Checkbox */}
                     <div className="flex items-center">
                       <input
                         type="checkbox"
-checked={selectedTasks.includes(task.Id)}
+                        checked={selectedTasks.includes(task.Id)}
                         onChange={(e) => handleTaskSelection(task.Id, e.target.checked)}
                         className="rounded border-gray-300 focus:ring-primary-500"
                       />
-                    </div>
-                    <div className="text-xs text-slate-400">
-                      Created {format(new Date(task.createdAt), "MMM d, yyyy")}
-                      {task.completedAt && (
-                        <span className="ml-2 text-green-600">
-                          • Completed {format(new Date(task.completedAt), "MMM d, yyyy")}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>

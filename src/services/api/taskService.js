@@ -39,6 +39,8 @@ async create(taskData) {
     const newTask = {
       ...taskData,
       Id: Math.max(...tasks.map(t => t.Id)) + 1,
+      name: taskData.name || "",
+      tags: taskData.tags || "",
       status: taskData.status || "not-started",
       category: taskData.category || "follow-up",
       assignedTo: taskData.assignedTo || null,
@@ -51,6 +53,9 @@ async create(taskData) {
       }] : [],
       comments: [],
       createdAt: now,
+      createdOn: now,
+      createdBy: "Current User",
+      owner: "Current User",
       completedAt: taskData.status === "completed" ? now : null
     }
     tasks = [newTask, ...tasks]
@@ -83,12 +88,16 @@ async update(id, taskData) {
       ...tasks[index],
       ...taskData,
       Id: parseInt(id),
+      name: taskData.name !== undefined ? taskData.name : tasks[index].name,
+      tags: taskData.tags !== undefined ? taskData.tags : tasks[index].tags,
       assignedTo: newAssignee || null,
       assignedAt: assignmentChanged && newAssignee ? now : tasks[index].assignedAt,
       assignmentHistory: newHistoryEntry ? [...currentHistory, newHistoryEntry] : currentHistory,
       comments: tasks[index].comments || [],
       completedAt: taskData.status === "completed" && !tasks[index].completedAt ? now : (taskData.status === "completed" ? tasks[index].completedAt : null),
-      updatedAt: now
+      updatedAt: now,
+      modifiedOn: now,
+      modifiedBy: "Current User"
     }
     
     tasks[index] = updatedTask
