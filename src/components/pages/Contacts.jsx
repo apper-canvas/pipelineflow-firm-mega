@@ -1227,42 +1227,51 @@ onClose={() => {
                 </div>
 
 {/* System Information */}
-                <div>
+<div>
                   <h4 className="text-sm font-medium text-gray-900 uppercase tracking-wide mb-3">
                     System Information
                   </h4>
                   <div className="space-y-3">
-                    {detailModal.contact.Owner && (
+                    {(detailModal.contact.Owner || detailModal.contact.Owner !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="User" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-900">{detailModal.contact.Owner?.Name || 'N/A'}</p>
+                          <p className="text-sm text-gray-900">
+                            {detailModal.contact.Owner?.Name || 
+                             (typeof detailModal.contact.Owner === 'string' ? detailModal.contact.Owner : 'System')}
+                          </p>
                           <p className="text-xs text-gray-500">Owner</p>
                         </div>
                       </div>
                     )}
                     
-                    {detailModal.contact.CreatedBy && (
+                    {(detailModal.contact.CreatedBy || detailModal.contact.CreatedBy !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="UserPlus" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-900">{detailModal.contact.CreatedBy?.Name || 'N/A'}</p>
+                          <p className="text-sm text-gray-900">
+                            {detailModal.contact.CreatedBy?.Name || 
+                             (typeof detailModal.contact.CreatedBy === 'string' ? detailModal.contact.CreatedBy : 'System')}
+                          </p>
                           <p className="text-xs text-gray-500">Created By</p>
                         </div>
                       </div>
                     )}
                     
-                    {detailModal.contact.ModifiedBy && (
+                    {(detailModal.contact.ModifiedBy || detailModal.contact.ModifiedBy !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Edit" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-900">{detailModal.contact.ModifiedBy?.Name || 'N/A'}</p>
+                          <p className="text-sm text-gray-900">
+                            {detailModal.contact.ModifiedBy?.Name || 
+                             (typeof detailModal.contact.ModifiedBy === 'string' ? detailModal.contact.ModifiedBy : 'System')}
+                          </p>
                           <p className="text-xs text-gray-500">Last Modified By</p>
                         </div>
                       </div>
@@ -1303,10 +1312,11 @@ onClose={() => {
                         </div>
                       </div>
                     )}
-                  </div>
+</div>
                 </div>
+              </div>
 
-                {/* Tags */}
+              {/* Tags */}
                 {detailModal.contact.tags && detailModal.contact.tags.length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-900 uppercase tracking-wide mb-3">
