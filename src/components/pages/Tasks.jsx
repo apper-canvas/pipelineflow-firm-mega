@@ -10,9 +10,9 @@ import Empty from "@/components/ui/Empty";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
 import Badge from "@/components/atoms/Badge";
+import CommentsPanel from "@/components/molecules/CommentsPanel";
 import AssigneeDisplay from "@/components/molecules/AssigneeDisplay";
 import AssigneeSelector from "@/components/molecules/AssigneeSelector";
-import CommentsPanel from "@/components/molecules/CommentsPanel";
 const TaskModal = ({ isOpen, task, onClose, onSave }) => {
 const [formData, setFormData] = useState({
     name: "",
@@ -333,10 +333,11 @@ const Tasks = () => {
   }
   const [tasks, setTasks] = useState([])
   const [contacts, setContacts] = useState([])
-  const [loading, setLoading] = useState(true)
+const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-const [selectedTask, setSelectedTask] = useState(null)
+  const [selectedTask, setSelectedTask] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isViewModalOpen, setViewModalOpen] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   const [filterPriority, setFilterPriority] = useState("all")
   const [sortBy, setSortBy] = useState("dueDate")
@@ -676,7 +677,7 @@ const tasksByStatus = {
             </label>
           </div>
           {filteredTasks.map((task) => (
-            <div key={task.Id} className="card hover:shadow-md transition-all duration-200 group">
+<div key={task.Id} className="card hover:shadow-md transition-all duration-200 group">
               <div className="flex items-start space-x-4">
                 {/* Checkbox */}
                 <button
@@ -692,10 +693,16 @@ const tasksByStatus = {
                   )}
                 </button>
 
-                {/* Task Content */}
-                <div className="flex-1 min-w-0">
+                {/* Task Content - Clickable Area */}
+                <div 
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => {
+                    setSelectedTask(task);
+                    setViewModalOpen(true);
+                  }}
+                >
                   <div className="flex items-start justify-between">
-<div className="flex-1">
+                    <div className="flex-1">
                       <h3 className={`font-semibold ${
                         task.status === "completed" 
                           ? "text-slate-500 line-through" 
@@ -727,10 +734,11 @@ const tasksByStatus = {
                       )}
                     </div>
 
-                    {/* Actions */}
+                    {/* Actions - Not clickable for task details */}
                     <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setSelectedTask(task)
                           setIsModalOpen(true)
                         }}
@@ -739,7 +747,10 @@ const tasksByStatus = {
                         <ApperIcon name="Edit" className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(task.Id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(task.Id);
+                        }}
                         className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                       >
                         <ApperIcon name="Trash2" className="h-4 w-4" />
@@ -748,7 +759,7 @@ const tasksByStatus = {
                   </div>
 
                   {/* Task Meta */}
-<div className="flex items-center flex-wrap gap-3 mt-3">
+                  <div className="flex items-center flex-wrap gap-3 mt-3">
                     <Badge variant={getPriorityColor(task.priority)} size="sm">
                       {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                     </Badge>
@@ -842,7 +853,10 @@ const tasksByStatus = {
                       <input
                         type="checkbox"
                         checked={selectedTasks.includes(task.Id)}
-                        onChange={(e) => handleTaskSelection(task.Id, e.target.checked)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleTaskSelection(task.Id, e.target.checked);
+                        }}
                         className="rounded border-gray-300 focus:ring-primary-500"
                       />
                     </div>
