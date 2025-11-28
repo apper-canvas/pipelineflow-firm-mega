@@ -659,38 +659,62 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Contact Info
                   </th>
-                  <th 
+<th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('owner')}
+                    onClick={() => handleSort('Owner')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>Owner</span>
                       <ApperIcon 
-                        name={sortConfig.key === 'owner' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
+                        name={sortConfig.key === 'Owner' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
                         className="h-4 w-4" 
                       />
                     </div>
                   </th>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('createdBy')}
+                    onClick={() => handleSort('CreatedBy')}
                   >
                     <div className="flex items-center space-x-1">
                       <span>Created By</span>
                       <ApperIcon 
-                        name={sortConfig.key === 'createdBy' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
+                        name={sortConfig.key === 'CreatedBy' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
                         className="h-4 w-4" 
                       />
                     </div>
                   </th>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('createdAt')}
+                    onClick={() => handleSort('CreatedOn')}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Created</span>
-<ApperIcon 
-                        name={sortConfig.key === 'createdAt' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
+                      <span>Created On</span>
+                      <ApperIcon 
+                        name={sortConfig.key === 'CreatedOn' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
+                        className="h-4 w-4" 
+                      />
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('ModifiedOn')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Modified On</span>
+                      <ApperIcon 
+                        name={sortConfig.key === 'ModifiedOn' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
+                        className="h-4 w-4" 
+                      />
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('ModifiedBy')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Modified By</span>
+                      <ApperIcon 
+                        name={sortConfig.key === 'ModifiedBy' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
                         className="h-4 w-4" 
                       />
                     </div>
@@ -789,19 +813,19 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                       </div>
                     </td>
 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.owner?.Name || '-'}
+                      {contact.Owner?.Name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.createdBy?.Name || '-'}
+                      {contact.CreatedBy?.Name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.createdAt ? format(new Date(contact.createdAt), "MMM d, yyyy") : '-'}
+                      {contact.CreatedOn ? format(new Date(contact.CreatedOn), "MMM d, yyyy") : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.lastContactedAt ? format(new Date(contact.lastContactedAt), "MMM d, yyyy") : '-'}
+                      {contact.ModifiedOn ? format(new Date(contact.ModifiedOn), "MMM d, yyyy") : '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {contact.modifiedBy?.Name || '-'}
+                      {contact.ModifiedBy?.Name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
@@ -1000,20 +1024,20 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                       <span className="text-slate-600 dark:text-slate-400">{contact.position}</span>
                     </div>
                   )}
-{contact.createdAt && (
+{contact.CreatedOn && (
                     <div className="flex items-center space-x-2 text-sm">
                       <ApperIcon name="Calendar" className="h-4 w-4 text-slate-400" />
                       <span className="text-slate-500 dark:text-slate-500">
-                        Created {format(new Date(contact.createdAt), "MMM d, yyyy")}
+                        Created {format(new Date(contact.CreatedOn), "MMM d, yyyy")}
                       </span>
                     </div>
                   )}
 
-                  {contact.lastContactedAt && (
+                  {contact.ModifiedOn && (
                     <div className="flex items-center space-x-2 text-sm">
                       <ApperIcon name="Clock" className="h-4 w-4 text-slate-400" />
                       <span className="text-slate-500 dark:text-slate-500">
-                        Last Modified {format(new Date(contact.lastContactedAt), "MMM d, yyyy")}
+                        Last Modified {format(new Date(contact.ModifiedOn), "MMM d, yyyy")}
                       </span>
                     </div>
                   )}
@@ -1247,50 +1271,50 @@ onClose={() => {
                 </div>
 
 {/* System Information */}
-<div>
+                <div>
                   <h4 className="text-sm font-medium text-gray-900 uppercase tracking-wide mb-3">
                     System Information
                   </h4>
                   <div className="space-y-3">
-{(detailModal.contact.owner || detailModal.contact.owner !== null) && (
+                    {(detailModal.contact.Owner || detailModal.contact.Owner !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="User" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {detailModal.contact.owner?.Name || 
-                             (typeof detailModal.contact.owner === 'string' ? detailModal.contact.owner : 'System')}
+                            {detailModal.contact.Owner?.Name || 
+                             (typeof detailModal.contact.Owner === 'string' ? detailModal.contact.Owner : 'System')}
                           </p>
                           <p className="text-xs text-gray-500">Owner</p>
                         </div>
                       </div>
                     )}
                     
-{(detailModal.contact.createdBy || detailModal.contact.createdBy !== null) && (
+                    {(detailModal.contact.CreatedBy || detailModal.contact.CreatedBy !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="UserPlus" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {detailModal.contact.createdBy?.Name || 
-                             (typeof detailModal.contact.createdBy === 'string' ? detailModal.contact.createdBy : 'System')}
+                            {detailModal.contact.CreatedBy?.Name || 
+                             (typeof detailModal.contact.CreatedBy === 'string' ? detailModal.contact.CreatedBy : 'System')}
                           </p>
                           <p className="text-xs text-gray-500">Created By</p>
                         </div>
                       </div>
                     )}
                     
-{(detailModal.contact.modifiedBy || detailModal.contact.modifiedBy !== null) && (
+                    {(detailModal.contact.ModifiedBy || detailModal.contact.ModifiedBy !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Edit" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {detailModal.contact.modifiedBy?.Name || 
-                             (typeof detailModal.contact.modifiedBy === 'string' ? detailModal.contact.modifiedBy : 'System')}
+                            {detailModal.contact.ModifiedBy?.Name || 
+                             (typeof detailModal.contact.ModifiedBy === 'string' ? detailModal.contact.ModifiedBy : 'System')}
                           </p>
                           <p className="text-xs text-gray-500">Last Modified By</p>
                         </div>
@@ -1318,35 +1342,22 @@ onClose={() => {
                         </div>
                       </div>
                     )}
-                    
-{detailModal.contact.createdAt && (
-                      <div className="flex items-center space-x-3">
-                        <div className="flex-shrink-0">
-                          <ApperIcon name="Calendar" className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-900">
-                            {format(new Date(detailModal.contact.createdAt), "MMM d, yyyy 'at' h:mm a")}
-                          </p>
-                          <p className="text-xs text-gray-500">Created On</p>
-                        </div>
-                      </div>
-                    )}
 
-                    {detailModal.contact.lastContactedAt && (
+                    {detailModal.contact.ModifiedOn && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Clock" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {format(new Date(detailModal.contact.lastContactedAt), "MMM d, yyyy 'at' h:mm a")}
+                            {format(new Date(detailModal.contact.ModifiedOn), "MMM d, yyyy 'at' h:mm a")}
                           </p>
                           <p className="text-xs text-gray-500">Modified On</p>
                         </div>
                       </div>
                     )}
-</div>
+                  </div>
+                </div>
                 </div>
               </div>
 
@@ -1406,12 +1417,11 @@ onClose={() => {
                     )}
                   </div>
                 </div>
-              )}
+)}
             </div>
           </div>
         </div>
       )}
-
       {/* Activity Timeline Modal */}
       {showTimeline.isOpen && showTimeline.contact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -1526,22 +1536,24 @@ onClose={() => {
             </div>
           </div>
         </div>
-      )}
-{/* Bulk Assignment Progress Indicator */}
-        {isBulkAssigning && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-              <div className="flex items-center space-x-3">
-                <div className="animate-spin h-6 w-6 border-2 border-primary-500 border-t-transparent rounded-full"></div>
-                <div>
-                  <h3 className="font-medium">Assigning Contacts</h3>
-                  <p className="text-sm text-gray-500">Please wait while we assign {selectedContacts.length} contact{selectedContacts.length !== 1 ? 's' : ''}...</p>
-                </div>
+)}
+
+      {/* Bulk Assignment Progress Indicator */}
+      {isBulkAssigning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin h-6 w-6 border-2 border-primary-500 border-t-transparent rounded-full"></div>
+              <div>
+                <h3 className="font-medium">Assigning Contacts</h3>
+                <p className="text-sm text-gray-500">Please wait while we assign {selectedContacts.length} contact{selectedContacts.length !== 1 ? 's' : ''}...</p>
               </div>
             </div>
           </div>
-        )}
-{/* Delete Confirmation Modal */}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
         contactName={deleteModal.contact?.name}
