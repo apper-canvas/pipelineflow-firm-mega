@@ -689,13 +689,19 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                   >
                     <div className="flex items-center space-x-1">
                       <span>Created</span>
-                      <ApperIcon 
+<ApperIcon 
                         name={sortConfig.key === 'createdAt' ? (sortConfig.direction === 'asc' ? 'ChevronUp' : 'ChevronDown') : 'ChevronsUpDown'} 
                         className="h-4 w-4" 
                       />
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Modified On
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Modified By
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
 </th>
                 </tr>
@@ -790,6 +796,12 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {contact.createdAt ? format(new Date(contact.createdAt), "MMM d, yyyy") : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {contact.lastContactedAt ? format(new Date(contact.lastContactedAt), "MMM d, yyyy") : '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {contact.modifiedBy?.Name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
@@ -988,12 +1000,20 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                       <span className="text-slate-600 dark:text-slate-400">{contact.position}</span>
                     </div>
                   )}
-                  
-                  {contact.createdAt && (
+{contact.createdAt && (
                     <div className="flex items-center space-x-2 text-sm">
                       <ApperIcon name="Calendar" className="h-4 w-4 text-slate-400" />
                       <span className="text-slate-500 dark:text-slate-500">
-                        Added {format(new Date(contact.createdAt), "MMM d, yyyy")}
+                        Created {format(new Date(contact.createdAt), "MMM d, yyyy")}
+                      </span>
+                    </div>
+                  )}
+
+                  {contact.lastContactedAt && (
+                    <div className="flex items-center space-x-2 text-sm">
+                      <ApperIcon name="Clock" className="h-4 w-4 text-slate-400" />
+                      <span className="text-slate-500 dark:text-slate-500">
+                        Last Modified {format(new Date(contact.lastContactedAt), "MMM d, yyyy")}
                       </span>
                     </div>
                   )}
@@ -1232,45 +1252,45 @@ onClose={() => {
                     System Information
                   </h4>
                   <div className="space-y-3">
-                    {(detailModal.contact.Owner || detailModal.contact.Owner !== null) && (
+{(detailModal.contact.owner || detailModal.contact.owner !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="User" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {detailModal.contact.Owner?.Name || 
-                             (typeof detailModal.contact.Owner === 'string' ? detailModal.contact.Owner : 'System')}
+                            {detailModal.contact.owner?.Name || 
+                             (typeof detailModal.contact.owner === 'string' ? detailModal.contact.owner : 'System')}
                           </p>
                           <p className="text-xs text-gray-500">Owner</p>
                         </div>
                       </div>
                     )}
                     
-                    {(detailModal.contact.CreatedBy || detailModal.contact.CreatedBy !== null) && (
+{(detailModal.contact.createdBy || detailModal.contact.createdBy !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="UserPlus" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {detailModal.contact.CreatedBy?.Name || 
-                             (typeof detailModal.contact.CreatedBy === 'string' ? detailModal.contact.CreatedBy : 'System')}
+                            {detailModal.contact.createdBy?.Name || 
+                             (typeof detailModal.contact.createdBy === 'string' ? detailModal.contact.createdBy : 'System')}
                           </p>
                           <p className="text-xs text-gray-500">Created By</p>
                         </div>
                       </div>
                     )}
                     
-                    {(detailModal.contact.ModifiedBy || detailModal.contact.ModifiedBy !== null) && (
+{(detailModal.contact.modifiedBy || detailModal.contact.modifiedBy !== null) && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Edit" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {detailModal.contact.ModifiedBy?.Name || 
-                             (typeof detailModal.contact.ModifiedBy === 'string' ? detailModal.contact.ModifiedBy : 'System')}
+                            {detailModal.contact.modifiedBy?.Name || 
+                             (typeof detailModal.contact.modifiedBy === 'string' ? detailModal.contact.modifiedBy : 'System')}
                           </p>
                           <p className="text-xs text-gray-500">Last Modified By</p>
                         </div>
@@ -1299,14 +1319,28 @@ onClose={() => {
                       </div>
                     )}
                     
-                    {detailModal.contact.ModifiedOn && (
+{detailModal.contact.createdAt && (
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-shrink-0">
+                          <ApperIcon name="Calendar" className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-900">
+                            {format(new Date(detailModal.contact.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                          </p>
+                          <p className="text-xs text-gray-500">Created On</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {detailModal.contact.lastContactedAt && (
                       <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
                           <ApperIcon name="Clock" className="h-5 w-5 text-gray-400" />
                         </div>
                         <div>
                           <p className="text-sm text-gray-900">
-                            {format(new Date(detailModal.contact.ModifiedOn), "MMM d, yyyy 'at' h:mm a")}
+                            {format(new Date(detailModal.contact.lastContactedAt), "MMM d, yyyy 'at' h:mm a")}
                           </p>
                           <p className="text-xs text-gray-500">Modified On</p>
                         </div>
