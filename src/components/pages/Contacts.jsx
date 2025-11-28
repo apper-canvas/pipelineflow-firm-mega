@@ -719,12 +719,6 @@ message={searchTerm ? "Try adjusting your search terms." : "Start building your 
                       />
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Modified On
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Modified By
-                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
 </th>
@@ -1416,12 +1410,14 @@ onClose={() => {
                       </button>
                     )}
                   </div>
-                </div>
-)}
+</div>
+              )}
             </div>
           </div>
         </div>
       )}
+      
+      {/* Activity Timeline Modal */}
       {/* Activity Timeline Modal */}
       {showTimeline.isOpen && showTimeline.contact && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
